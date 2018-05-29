@@ -1,0 +1,5 @@
+[
+	{"name": "Земля", "remote": 16, "angle": 4, "speed": -0.0016},
+	{"name": "Дзюнко", "remote": 69, "angle": -0.5, "speed": 0.002},
+	{"name": "Элина", "remote": 54, "angle": 2, "speed": 0.003}
+]
