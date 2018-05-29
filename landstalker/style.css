@@ -1,0 +1,118 @@
+/*@import url(https://fonts.googleapis.com/css?family=Amaranth);*/
+@import url(https://fonts.googleapis.com/css?family=Jura);
+@import url(https://fonts.googleapis.com/css?family=Forum);
+@import url(https://fonts.googleapis.com/css?family=Kurale);
+
+body {
+	margin: 0;
+	padding: 0;
+	background: black;
+	color: white;
+}
+
+img {
+	display: block;
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+a {
+	color: #87CEEB;
+	text-decoration: none;
+	font-style: italic;
+}
+
+a:hover {
+	color: yellow;
+	transition: color .6s ease-in-out;
+}
+
+.img-left {
+	float: left;
+	margin-right: 8px;
+}
+
+.img-right {
+	float: right;
+	margin-left: 8px;
+}
+
+#head-menu a {
+	display: block;
+	color: #F5F5F5;
+	font-style: normal;
+}
+
+#head-menu a:hover {
+	color: #DC143C;
+}
+
+#maket {
+	width: 854px;
+	margin: 0 auto;
+}
+
+#head-image-wrapper {
+	height: 128px;
+}
+
+#middle {
+	background-color: black;
+	position: relative;
+	margin-top: 50px;
+}
+
+#head-menu {
+	float: right;
+	margin-right: 0;
+}
+
+#head-menu li {
+	float: left;
+}
+
+#head-menu a {
+	padding: 12px 15px;
+	font-family: 'Jura';
+	font-size: 21px;
+	font-weight: bold;
+}
+
+#content {
+	display: flex;
+}
+
+#content-text {
+	width: 600px;
+	font-family: 'Kurale';
+	font-size: 16px;
+	color: rgb(209, 202, 208);
+	/*background-color: rgb(36, 48, 87);*/
+}
+
+#content-menu-wrapper {
+	position: relative;
+	left: 600px;
+}
+
+#content-menu-wrapper > div {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+#content-menu {
+	width: 254px;
+	position: fixed;
+	font-family: 'Forum';
+}
+
+#content-menu li {
+	padding: 10px 12px 0;
+	font-size: 19px;
+	/*font-weight: bold;*/
+}
