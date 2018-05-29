@@ -1,0 +1,46 @@
+body {
+	margin:0;
+	padding:0;
+	background:#efefef;
+}
+
+#maket {
+	width:854;
+	margin:0 auto;
+}
+
+#gallerybox {
+	width:2562;
+	transition: all 0.4s ease-in-out;
+}
+
+#gallerybox li {
+	float:left;
+}
+
+#gallerybox img {
+	display:block;
+}
+
+ul {
+	margin:0;
+	padding:0;
+	list-style:none;
+}
+
+.menu li {
+	float:left;
+	display:block;
+}
+
+.menu a {
+	padding:12 16;
+	display:block;
+	text-decoration:none;
+	transition: all 0.4s ease-in-out;
+	font-size:15;
+}
+
+.menu a:hover {
+	background:#0079db;
+}
