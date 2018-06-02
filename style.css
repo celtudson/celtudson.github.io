@@ -53,28 +53,27 @@ ul {
 }
 
 #content {
-	padding-right: 254px;
+	display: flex;
 }
 
 #content-text {
+	width: 600px;
 	background-color: rgb(36, 48, 87);
 }
 
 #content-menu-wrapper {
-	width: 100%;
-	min-width: 854px;
-	position: fixed;
+	position: relative;
+}
+
+#content-menu-wrapper > div {
+	position: absolute;
 	top: 0;
-	left: 0;
+	right: 0;
 }
 
 #content-menu {
 	width: 254px;
-	margin: 0 auto;
-	position: relative;
-	top: 181px;
-	left: 300px;
-	/*background-color: red;*/
+	position: fixed;
 }
 
 #content-menu li {
