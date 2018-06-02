@@ -1,46 +1,84 @@
+/*@import url(https://fonts.googleapis.com/css?family=Amaranth);*/
+@import url(https://fonts.googleapis.com/css?family=Jura);
+@import url(https://fonts.googleapis.com/css?family=Forum);
+
 body {
-	margin:0;
-	padding:0;
-	background:#efefef;
+	margin: 0;
+	padding: 0;
+	background: black;
+	font-family: 'Forum';
+	color: white;
 }
 
 #maket {
-	width:854;
-	margin:0 auto;
+	width: 854px;
+	margin: 0 auto;
 }
 
-#gallerybox {
-	width:2562;
-	transition: all 0.4s ease-in-out;
+#head-image:hover {
 }
 
-#gallerybox li {
-	float:left;
-}
+#middle {
 
-#gallerybox img {
-	display:block;
 }
 
 ul {
-	margin:0;
-	padding:0;
-	list-style:none;
+	margin: 0;
+	padding: 0;
+	list-style: none;
 }
 
-.menu li {
-	float:left;
-	display:block;
+#head-menu {
+	float: right;
+	margin-right: 0;
+	font-family: 'Jura';
 }
 
-.menu a {
-	padding:12 16;
-	display:block;
-	text-decoration:none;
+#head-menu li {
+	float: left;
+}
+
+#head-menu a {
+	padding: 12px 15px;
+	display: block;
+	text-decoration: none;
 	transition: all 0.4s ease-in-out;
-	font-size:15;
+	font-size: 21px;
+	font-weight: bold;
+	color: white;
 }
 
-.menu a:hover {
-	background:#0079db;
+#head-menu a:hover {
+	color: red;
+}
+
+#content {
+	padding-right: 254px;
+}
+
+#content-text {
+	background-color: rgb(36, 48, 87);
+}
+
+#content-menu-wrapper {
+	width: 100%;
+	min-width: 854px;
+	position: fixed;
+	top: 0;
+	left: 0;
+}
+
+#content-menu {
+	width: 254px;
+	margin: 0 auto;
+	position: relative;
+	top: 181px;
+	left: 300px;
+	/*background-color: red;*/
+}
+
+#content-menu li {
+	padding: 24px 12px 0;
+	font-size: 19px;
+	font-weight: bold;
 }
