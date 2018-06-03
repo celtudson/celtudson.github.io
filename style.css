@@ -1,13 +1,38 @@
 /*@import url(https://fonts.googleapis.com/css?family=Amaranth);*/
 @import url(https://fonts.googleapis.com/css?family=Jura);
 @import url(https://fonts.googleapis.com/css?family=Forum);
+@import url(https://fonts.googleapis.com/css?family=Kurale);
 
 body {
 	margin: 0;
 	padding: 0;
 	background: black;
-	font-family: 'Forum';
 	color: white;
+}
+
+img {
+	display: block;
+}
+
+.img-left {
+	float: left;
+	margin-right: 8px;
+}
+
+.img-right {
+	float: right;
+	margin-left: 8px;
+}
+
+a {
+	display: block;
+	text-decoration: none;
+	color: white;
+	transition: all 0.4s ease-in-out;
+}
+
+a:hover {
+	color: red;
 }
 
 #maket {
@@ -40,16 +65,8 @@ ul {
 
 #head-menu a {
 	padding: 12px 15px;
-	display: block;
-	text-decoration: none;
-	transition: all 0.4s ease-in-out;
 	font-size: 21px;
 	font-weight: bold;
-	color: white;
-}
-
-#head-menu a:hover {
-	color: red;
 }
 
 #content {
@@ -58,11 +75,15 @@ ul {
 
 #content-text {
 	width: 600px;
-	background-color: rgb(36, 48, 87);
+	font-family: 'Kurale';
+	font-size: 16px;
+	color: rgb(209, 202, 208);
+	/*background-color: rgb(36, 48, 87);*/
 }
 
 #content-menu-wrapper {
 	position: relative;
+	left: 600px;
 }
 
 #content-menu-wrapper > div {
@@ -74,6 +95,7 @@ ul {
 #content-menu {
 	width: 254px;
 	position: fixed;
+	font-family: 'Forum';
 }
 
 #content-menu li {
