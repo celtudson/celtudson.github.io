@@ -40,11 +40,14 @@ a:hover {
 	margin: 0 auto;
 }
 
-#head-image:hover {
+#head-image-wrapper {
+	height: 128px;
 }
 
 #middle {
-
+	background-color: black;
+	position: relative;
+	margin-top: 50px;
 }
 
 ul {
@@ -101,5 +104,5 @@ ul {
 #content-menu li {
 	padding: 24px 12px 0;
 	font-size: 19px;
-	font-weight: bold;
+	/*font-weight: bold;*/
 }
