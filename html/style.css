@@ -1,0 +1,133 @@
+@import url(https://fonts.googleapis.com/css?family=Ubuntu);
+@import url(https://fonts.googleapis.com/css?family=Fira+Sans);
+
+body {
+	margin: 0;
+	padding: 0;
+	background: #f3f3f3;
+	color: black;
+}
+
+img {
+	display: block;
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+a {
+	display: block;
+	text-decoration: none;
+}
+
+#maket {
+	width: 1024px;
+	margin: 0 auto;
+}
+
+#head-bar {
+	height: 40px;
+	background-color: #014598;
+}
+
+#head-image-wrapper {
+	height: 160px;
+}
+
+#head-image {
+	display: block;
+	width: 100%;
+    max-width: 100%;
+    height: auto;
+}
+
+#head-menu-wrapper {
+	overflow: hidden;
+	background-color: #014598
+}
+
+
+.items-menu {
+	display: flex;
+}
+
+.items-menu a {
+	width: 336px;
+	height: 300px;
+	overflow: hidden;
+	margin-top: -100px;
+	transition: all 0.4s ease-in-out;
+}
+
+.items-menu img {
+	transition: all 0.4s ease-in-out;
+}
+
+.item-descr {
+	margin-top: -110px;
+	padding: 6px 12px;
+	transition: all 0.4s ease-in-out;
+	position: relative;
+	z-index: 1;
+	background-color: rgb(0, 0, 0, 0.7);
+	color: white;
+	font-family: 'Ubuntu';
+	font-size: 18px;
+}
+
+.items-menu a:hover {
+	margin-top: 0px;
+	height: 336px;
+}
+
+.items-menu a:hover .item-descr {
+	margin-top: 0px;
+}
+
+#slider {
+	width: 680px;
+}
+
+.slider-descr {
+	padding: 6px 0px;
+	font-family: 'Fira Sans';
+	font-size: 18px;
+}
+
+.slider-descr ul {
+	margin-left: 32px;
+	margin-top: 16px;
+	list-style-image: url(img/mcheck15.png);
+}
+
+.slider-descr li {
+	margin-bottom: 10px;
+}
+
+.bonus {
+	background-color: rgb(204, 83, 83);
+	font-size: 20px;
+	color: snow;
+	text-shadow: #11233a 3px 3px 3px;
+}
+
+#order-wrapper {
+	position: relative;
+	left: 0px;
+	background-color: aqua;
+}
+
+#order-wrapper > div {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+#order {
+	width: 336px;
+	position: fixed;
+	background-color: blue;
+}
