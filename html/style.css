@@ -1,5 +1,6 @@
 @import url(https://fonts.googleapis.com/css?family=Ubuntu);
 @import url(https://fonts.googleapis.com/css?family=Fira+Sans);
+@import url(https://fonts.googleapis.com/css?family=Lato);
 
 body {
 	margin: 0;
@@ -28,30 +29,74 @@ a {
 	margin: 0 auto;
 }
 
-#head-bar {
-	height: 40px;
-	background-color: #014598;
-}
-
 #head-image-wrapper {
 	height: 160px;
+	overflow: hidden;
 }
 
 #head-image {
-	display: block;
 	width: 100%;
-    max-width: 100%;
-    height: auto;
 }
 
-#head-menu-wrapper {
-	overflow: hidden;
-	background-color: #014598
+#head-logo {
+	position: absolute;
+	top: 0;
+	margin-left: 750px;
 }
 
+#head-logo:hover {
+	cursor: pointer;
+}
+
+#headbar-wrapper {
+	height: 40px;
+}
+
+#headbar-wrapper > div {
+	width: 100%;
+	position: absolute;
+	left: 0;
+	background-color: #014598;
+}
+
+#headbar {
+	width: 1024px;
+	height: 40px;
+	margin: 0 auto;
+}
+
+#headbar-title {
+	margin-left: 25px;
+	font-family: 'Ubuntu';
+	font-size: 24px;
+	color: white;
+}
+
+#headbar-phone {
+	float: right;
+	margin-right: 55px;
+	font-family: 'Lato';
+	font-size: 33px;
+	color: white;
+}
+
+
+/*ITEMS*/
+
+#items-menu-wrapper {
+	width: 100%;
+	height: 200px;
+}
+
+#items-menu-wrapper > div {
+	position: absolute;
+	left: 50%;
+	margin-left: -856px;
+}
 
 .items-menu {
 	display: flex;
+	overflow: hidden;
 }
 
 .items-menu a {
@@ -59,17 +104,17 @@ a {
 	height: 300px;
 	overflow: hidden;
 	margin-top: -100px;
-	transition: all 0.4s ease-in-out;
+	transition: all .4s ease-in-out;
 }
 
 .items-menu img {
-	transition: all 0.4s ease-in-out;
+	transition: all .4s ease-in-out;
 }
 
 .item-descr {
 	margin-top: -110px;
 	padding: 6px 12px;
-	transition: all 0.4s ease-in-out;
+	transition: all .4s ease-in-out;
 	position: relative;
 	z-index: 1;
 	background-color: rgb(0, 0, 0, 0.7);
@@ -78,21 +123,31 @@ a {
 	font-size: 18px;
 }
 
+#item0 {
+	margin-top: -110px;
+}
+
 .items-menu a:hover {
-	margin-top: 0px;
+	margin-top: 0;
 	height: 336px;
+	cursor: pointer;
 }
 
 .items-menu a:hover .item-descr {
-	margin-top: 0px;
+	margin-top: 0;
 }
+
+/*ITEMS*/
+
+
+/*SLIDER*/
 
 #slider {
 	width: 680px;
 }
 
 .slider-descr {
-	padding: 6px 0px;
+	padding: 6px 0;
 	font-family: 'Fira Sans';
 	font-size: 18px;
 }
@@ -100,7 +155,7 @@ a {
 .slider-descr ul {
 	margin-left: 32px;
 	margin-top: 16px;
-	list-style-image: url(img/mcheck15.png);
+	list-style-image: url(img/check.png);
 }
 
 .slider-descr li {
@@ -110,13 +165,19 @@ a {
 .bonus {
 	background-color: rgb(204, 83, 83);
 	font-size: 20px;
-	color: snow;
+	color: white;
 	text-shadow: #11233a 3px 3px 3px;
 }
 
+/*SLIDER*/
+
+
+/*ORDER*/
+
 #order-wrapper {
+	display: none;
 	position: relative;
-	left: 0px;
+	left: -336px;
 	background-color: aqua;
 }
 
@@ -129,5 +190,34 @@ a {
 #order {
 	width: 336px;
 	position: fixed;
-	background-color: blue;
+	padding: 14px 0;
+	text-align: center;
 }
+
+#order input,
+#order textarea {
+	width: 300px;
+	padding: 8px;
+	background-color: snow;
+	border: 2px solid #FF0000;
+	border-radius: 6px;
+	font-weight: bold;
+}
+
+#order input:hover,
+#order textarea:hover,
+#order input:focus,
+#order textarea:focus {
+	transition: 1.6s;
+	border: 2px solid #0000FF;
+}
+
+#order textarea {
+	height: 84px;
+}
+
+#submit:hover {
+	cursor: pointer;
+}
+
+/*ORDER*/
