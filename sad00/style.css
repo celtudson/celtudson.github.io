@@ -1,0 +1,216 @@
+@import url(https://fonts.googleapis.com/css?family=Ubuntu);
+@import url(https://fonts.googleapis.com/css?family=Fira+Sans);
+@import url(https://fonts.googleapis.com/css?family=Lato);
+
+body {
+	margin: 0;
+	padding: 0;
+	background: #f3f3f3;
+	color: black;
+}
+
+img {
+	display: block;
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+a {
+	display: block;
+	text-decoration: none;
+}
+
+#maket {
+	width: 1024px;
+	margin: 0 auto;
+}
+
+#head-image-wrapper {
+	height: 160px;
+	overflow: hidden;
+}
+
+#head-image {
+	width: 100%;
+}
+
+#head-logo {
+	position: absolute;
+	top: 0;
+	margin-left: 750px;
+}
+
+#head-logo:hover {
+	cursor: pointer;
+}
+
+#headbar-wrapper {
+	height: 40px;
+}
+
+#headbar-wrapper > div {
+	width: 100%;
+	position: absolute;
+	left: 0;
+	background-color: #014598;
+}
+
+#headbar {
+	width: 1024px;
+	height: 40px;
+	margin: 0 auto;
+}
+
+#headbar-title {
+	position: absolute;
+	margin-top: 6px;
+	margin-left: 25px;
+	font-family: 'Ubuntu';
+	font-size: 24px;
+	color: white;
+}
+
+#headbar-phone {
+	float: right;
+	margin-right: 55px;
+	font-family: 'Lato';
+	font-size: 33px;
+	color: white;
+}
+
+
+/*ITEMS*/
+
+#items-menu-wrapper {
+	width: 100%;
+	height: 200px;
+}
+
+#items-menu-wrapper > div {
+	position: absolute;
+	left: 50%;
+	margin-left: -512px;
+}
+
+#items-menu {
+	display: flex;
+	width: 1024px;
+	overflow: hidden;
+}
+
+#items-menu a {
+	height: 300px;
+	margin-top: -100px;
+	overflow: hidden;
+	margin-right: 8px;
+	position: relative;
+	z-index: 2;
+	transition: all .4s ease-in-out;
+	border-radius: 12px;
+}
+
+#items-menu a:last-child {
+	margin-right: 0;
+}
+
+.item-descr {
+	width: 100%;
+	padding: 6px 0;
+	position: absolute;
+	bottom: 0;
+	z-index: 1;
+	transition: all .4s ease-in-out;
+	background-color: rgb(0, 0, 0, 0.7);
+	color: white;
+	font-family: 'Ubuntu';
+	font-size: 18px;
+	text-align: center;
+}
+
+#items-menu a:hover {
+	margin-top: -10px;
+	height: 336px;
+	cursor: pointer;
+}
+
+/*#items-menu a:hover .item-descr {
+	bottom: -100px;
+}*/
+
+/*ITEMS*/
+
+
+/*SLIDER*/
+
+#slider {
+	width: 680px;
+}
+
+.slider-descr {
+	padding: 6px 0;
+	font-family: 'Fira Sans';
+	font-size: 18px;
+}
+
+.slider-descr ul {
+	margin-left: 32px;
+	margin-top: 16px;
+	list-style-image: url(img/check.png);
+}
+
+.slider-descr li {
+	margin-bottom: 10px;
+}
+
+.bonus {
+	background-color: rgb(204, 83, 83);
+	font-size: 20px;
+	color: white;
+	text-shadow: #11233a 3px 3px 3px;
+}
+
+/*SLIDER*/
+
+
+/*ORDER*/
+
+#order-wrapper {
+	position: relative;
+}
+
+#order-wrapper > div {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+#order {
+	width: 336px;
+	position: fixed;
+	padding: 14px 0;
+	text-align: center;
+}
+
+#order input,
+#order textarea {
+	width: 300px;
+	padding: 8px;
+	background-color: snow;
+	border: 2px solid #FF0000;
+	border-radius: 6px;
+	font-weight: bold;
+}
+
+#order textarea {
+	height: 64px;
+}
+
+#submit:hover {
+	cursor: pointer;
+}
+
+/*ORDER*/
