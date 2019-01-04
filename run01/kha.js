@@ -781,7 +781,7 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		g.set_font(kha_Assets.fonts.OpenSans_Regular);
 		g.set_fontSize(20);
 		g.begin();
-		g.set_color(-1015680);
+		g.set_color(4080);
 		g.fillRect(-44,0,684,480);
 		this.tilemap.drawLayer(g,0);
 		g.set_color(-2354116);
