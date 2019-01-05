@@ -786,7 +786,7 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		g.set_fontSize(20);
 		g.begin();
 		g.set_color(4080);
-		g.fillRect(-44,0,684,480);
+		g.fillRect(0,0,256,144);
 		var tempMatrix = g.transformations[g.transformations.length - 1];
 		var _this = g.transformations[g.transformations.length - 1];
 		var m__00 = 1;
@@ -812,10 +812,7 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		_this1._22 = transformation._22;
 		this.tilemap.drawLayer(g,0);
 		g.set_color(-2354116);
-		g.drawString((this.m.x / 16 | 0) + "/" + this.point,4,4);
-		g.drawString(this.stage + ": " + (this.distance + (this.m.x / 16 | 0)) + "/" + this.nextStage,4,16);
 		g.fillRect(Math.ceil(this.tilemap.camera.x + this.m.x),this.m.y,this.m.w,this.m.h);
-		g.end();
 		g.setTransformation(tempMatrix);
 		var _this2 = g.transformations[g.transformations.length - 1];
 		_this2._00 = tempMatrix._00;
@@ -827,11 +824,16 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		_this2._02 = tempMatrix._02;
 		_this2._12 = tempMatrix._12;
 		_this2._22 = tempMatrix._22;
+		g.drawString((this.m.x / 16 | 0) + "/" + this.point,4,4);
+		g.drawString(this.stage + ": " + (this.distance + (this.m.x / 16 | 0)) + "/" + this.nextStage,4,16);
+		g.end();
 	}
 	,onKeyDown: function(key) {
 		if(key == 32) {
-			if(this.m.onGround == true && this.m.y >= 0) {
-				this.m.sy = -7;
+			if(this.m.onGround != false) {
+				if((this.gravVector > 0 ? 1 : -1) == 1 && this.m.y >= 0 || (this.gravVector > 0 ? 1 : -1) == -1 && this.m.y < 144) {
+					this.m.sy = -7 * this.gravVector;
+				}
 			}
 		}
 		if(key == 37) {
@@ -845,8 +847,10 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		}
 	}
 	,onMouseDown: function(ddd) {
-		if(this.m.onGround == true && this.m.y >= 0) {
-			this.m.sy = -7;
+		if(this.m.onGround != false) {
+			if((this.gravVector > 0 ? 1 : -1) == 1 && this.m.y >= 0 || (this.gravVector > 0 ? 1 : -1) == -1 && this.m.y < 144) {
+				this.m.sy = -7 * this.gravVector;
+			}
 		}
 		this.gravDir = -1 * this.gravDir;
 	}
@@ -857,8 +861,11 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		return -1;
 	}
 	,tryJump: function() {
-		if(this.m.onGround == true && this.m.y >= 0) {
-			this.m.sy = -7;
+		if(this.m.onGround == false) {
+			return;
+		}
+		if((this.gravVector > 0 ? 1 : -1) == 1 && this.m.y >= 0 || (this.gravVector > 0 ? 1 : -1) == -1 && this.m.y < 144) {
+			this.m.sy = -7 * this.gravVector;
 		}
 	}
 	,onUpdate: function() {
@@ -999,10 +1006,15 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 					}
 				} else if(dir == 1) {
 					if(b.sy > 0) {
-						b.onGround = true;
+						if((this.gravVector > 0 ? 1 : -1) == 1) {
+							b.onGround = true;
+						}
 						b.y = iy * this.tileSize - b.h;
 						b.sy = 0;
 					} else if(b.sy < 0) {
+						if((this.gravVector > 0 ? 1 : -1) == -1) {
+							b.onGround = true;
+						}
 						b.y = iy * this.tileSize + this.tileSize;
 						b.sy = 0;
 					}
