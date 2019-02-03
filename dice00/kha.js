@@ -333,6 +333,7 @@ var game_Dice = function() {
 	this.draw1_dice2 = 0;
 	this.draw1_dice = 0;
 	this.battleLogTemp = [];
+	this.battleLogColor = [];
 	this.battleLog = [];
 	this.imgDice = kha_Assets.images.dice;
 };
@@ -348,6 +349,7 @@ game_Dice.prototype = {
 	,being2_dice: null
 	,lastDiceContr: null
 	,battleLog: null
+	,battleLogColor: null
 	,battleLogTemp: null
 	,draw1_dice: null
 	,draw1_dice2: null
@@ -364,17 +366,19 @@ game_Dice.prototype = {
 		this.being2 = b2;
 		this.battleLog.length = 0;
 		if(heroFirst == false) {
-			this.nextTurn = -1;
-			var word = "На Вас напал " + game_data_Races.getName(b2.race);
-			haxe_Log.trace(word,{ fileName : "game/Dice.hx", lineNumber : 44, className : "game.Dice", methodName : "initBattle"});
-			this.battleLog.push(word);
+			this.nextTurn = false;
+			var line = "На Вас напал " + game_data_Races.getName(b2.race);
+			haxe_Log.trace(line,{ fileName : "game/Dice.hx", lineNumber : 46, className : "game.Dice", methodName : "initBattle"});
+			this.battleLog.push(line);
+			this.battleLogColor.push(0);
 			this.turnBarY = 15;
 			this.roll();
 		} else {
-			this.nextTurn = 1;
-			var word1 = "Вы напали на " + game_data_Races.getName(b2.race);
-			haxe_Log.trace(word1,{ fileName : "game/Dice.hx", lineNumber : 51, className : "game.Dice", methodName : "initBattle"});
-			this.battleLog.push(word1);
+			this.nextTurn = true;
+			var line1 = "Вы напали на " + game_data_Races.getName(b2.race);
+			haxe_Log.trace(line1,{ fileName : "game/Dice.hx", lineNumber : 54, className : "game.Dice", methodName : "initBattle"});
+			this.battleLog.push(line1);
+			this.battleLogColor.push(0);
 			this.turnBarY = -1;
 			this.roll();
 		}
@@ -384,8 +388,8 @@ game_Dice.prototype = {
 			this.roll();
 		}
 	}
-	,getName: function(d0) {
-		if(d0 == 1) {
+	,getName: function() {
+		if(this.nextTurn) {
 			return "Игрок";
 		} else {
 			return "Противник";
@@ -397,37 +401,50 @@ game_Dice.prototype = {
 		}
 		return " получает " + multi + " * " + atk + " = " + damage + " урона!";
 	}
+	,getColor: function(context) {
+		if(context == false) {
+			if(this.nextTurn) {
+				return 1;
+			} else {
+				return 2;
+			}
+		} else if(this.nextTurn) {
+			return 2;
+		} else {
+			return 1;
+		}
+	}
 	,roll: function() {
 		if(this.autoRoll == false && this.lastDiceContr) {
 			this.lastDiceContr = false;
-			this.nextTurn = -1 * this.nextTurn;
+			this.nextTurn = !this.nextTurn;
 			this.setTurnBar();
 		}
 		this.allowRoll = false;
 		this.autoRoll = false;
 		var atk = this.being1;
 		var dfn = this.being2;
-		if(this.nextTurn == -1) {
+		if(this.nextTurn == false) {
 			var d0 = atk;
 			atk = dfn;
 			dfn = d0;
 		}
 		var traceString = "";
-		this.battleLogTemp.push("");
+		this.addBattleLogTemp("");
 		if(this.lastDiceContr == false) {
-			var word = (this.nextTurn == 1 ? "Игрок" : "Противник") + " делает свой ход";
-			traceString += word + "\n";
-			this.battleLogTemp.push(word);
+			var line = (this.nextTurn ? "Игрок" : "Противник") + " делает свой ход";
+			traceString += line + "\n";
+			this.addBattleLogTemp(line);
 		}
-		this.nextTurn = -1 * this.nextTurn;
+		this.nextTurn = !this.nextTurn;
 		this.needUpdate = true;
 		var atkDice = Std.random(6) + 1;
 		var dfnDice = Std.random(6) + 1;
 		var resultDice = atkDice - dfnDice;
-		var word1 = "Результат бросков кубика: " + atkDice + " - " + dfnDice + " = " + resultDice;
-		traceString += word1 + "\n";
-		this.battleLogTemp.push(word1);
-		if(this.nextTurn == -1) {
+		var line1 = "Результат бросков кубика: " + atkDice + " - " + dfnDice + " = " + resultDice;
+		traceString += line1 + "\n";
+		this.addBattleLogTemp(line1);
+		if(this.nextTurn == false) {
 			this.being1_dice = atkDice;
 			this.being2_dice = dfnDice;
 		} else {
@@ -459,48 +476,60 @@ game_Dice.prototype = {
 			break;
 		}
 		var damage = 0;
-		var word2 = "";
 		switch(resultDice) {
 		case -5:
-			var word3 = (this.nextTurn == 1 ? "Игрок" : "Противник") + " контратакует!";
-			traceString += word3;
-			haxe_Log.trace(traceString,{ fileName : "game/Dice.hx", lineNumber : 129, className : "game.Dice", methodName : "roll"});
-			this.battleLogTemp.push(word3);
+			var line2 = (this.nextTurn ? "Игрок" : "Противник") + " контратакует!";
+			traceString += line2;
+			haxe_Log.trace(traceString,{ fileName : "game/Dice.hx", lineNumber : 139, className : "game.Dice", methodName : "roll"});
+			this.addBattleLogTemp(line2,this.nextTurn ? 2 : 1);
 			this.lastDiceContr = true;
 			this.autoRoll = true;
 			return;
 		case -4:case -3:
-			word2 += "Промах!";
+			var line3 = "Промах!";
+			traceString += line3;
+			this.addBattleLogTemp(line3,this.nextTurn ? 2 : 1);
 			break;
 		case 0:
-			word2 += "Синхронно скрестили клинки!";
+			var line4 = "Синхронно скрестили клинки!";
+			traceString += line4;
+			this.addBattleLogTemp(line4,this.nextTurn ? 2 : 1);
 			break;
 		case 5:
-			word2 += "Великолепное попадание!";
+			var line5 = "Великолепное попадание!";
+			traceString += line5;
+			this.addBattleLogTemp(line5,this.nextTurn ? 1 : 2);
 			break;
 		}
-		if(word2 != "") {
-			haxe_Log.trace(word2,{ fileName : "game/Dice.hx", lineNumber : 142, className : "game.Dice", methodName : "roll"});
-			this.battleLogTemp.push(word2);
-		}
-		var word4 = "";
+		var line6 = "";
 		if(resultDice == 0) {
 			damage = 1;
-			word4 += (this.nextTurn == 1 ? "Игрок" : "Противник") + " получает 1 урона!";
+			line6 += (this.nextTurn ? "Игрок" : "Противник") + " получает 1 урона!";
 		} else {
 			damage = multi * atk.atk;
-			word4 += (this.nextTurn == 1 ? "Игрок" : "Противник") + (multi == 0 ? " получает " + damage + " урона!" : " получает " + multi + " * " + atk.atk + " = " + damage + " урона!");
+			line6 += (this.nextTurn ? "Игрок" : "Противник") + (multi == 0 ? " получает " + damage + " урона!" : " получает " + multi + " * " + atk.atk + " = " + damage + " урона!");
 		}
 		dfn.hp -= damage;
-		traceString += word4 + "\n" + this.being1.hp + " vs " + this.being2.hp + "\n";
-		this.battleLogTemp.push(word4);
-		if(this.lastDiceContr == false && this.nextTurn == -1) {
+		traceString += line6 + "\n" + this.being1.hp + " vs " + this.being2.hp + "\n";
+		if(damage == 0) {
+			this.addBattleLogTemp(line6);
+		} else {
+			this.addBattleLogTemp(line6,this.nextTurn ? 1 : 2);
+		}
+		if(this.lastDiceContr == false && this.nextTurn == false) {
 			this.autoRoll = true;
 		}
 		var d1 = 0;
-		haxe_Log.trace(traceString,{ fileName : "game/Dice.hx", lineNumber : 162, className : "game.Dice", methodName : "roll"});
+		haxe_Log.trace(traceString,{ fileName : "game/Dice.hx", lineNumber : 178, className : "game.Dice", methodName : "roll"});
 	}
-	,addBattleLog: function() {
+	,addBattleLogTemp: function(line,color) {
+		if(color == null) {
+			color = 0;
+		}
+		this.battleLogTemp.push(line);
+		this.battleLogColor.push(color);
+	}
+	,updateBattleLog: function() {
 		var _g = 0;
 		var _g1 = this.battleLogTemp;
 		while(_g < _g1.length) {
@@ -516,14 +545,15 @@ game_Dice.prototype = {
 			while(_g2 < _g3) {
 				var i1 = _g2++;
 				this.battleLog.shift();
+				this.battleLogColor.shift();
 			}
 		}
 	}
 	,setTurnBar: function() {
-		if(this.nextTurn == 1) {
-			this.turnBarY = -1;
-		} else {
+		if(this.nextTurn == false) {
 			this.turnBarY = 15;
+		} else {
+			this.turnBarY = -1;
 		}
 	}
 	,render: function(g,x,y) {
@@ -544,8 +574,20 @@ game_Dice.prototype = {
 		var _g1 = l;
 		while(_g < _g1) {
 			var i = _g++;
-			g.drawString(this.battleLog[i],x,-6 - l * 14 + y * 2 + i * 14);
+			switch(this.battleLogColor[i]) {
+			case 0:
+				g.set_color(-1);
+				break;
+			case 1:
+				g.set_color(-65536);
+				break;
+			case 2:
+				g.set_color(-16711936);
+				break;
+			}
+			g.drawString(this.battleLog[i],x + 12,-6 - l * 14 + y * 2 + i * 14);
 		}
+		g.set_color(-1);
 		var transformation1 = new kha_math_FastMatrix3(2,0,0,0,2,0,0,0,1);
 		g.setTransformation(transformation1);
 		var _this1 = g.transformations[g.transformations.length - 1];
@@ -560,29 +602,29 @@ game_Dice.prototype = {
 		_this1._22 = transformation1._22;
 		if(this.needUpdate) {
 			g.fillRect(0,0,4,4);
-			if(this.nextTurn == 1) {
-				if(this.turnBarY > -1) {
-					this.turnBarY -= 0.8;
+			if(this.nextTurn == false) {
+				if(this.turnBarY < 15) {
+					this.turnBarY += 0.8;
 				} else {
 					this.needUpdate = false;
-					this.turnBarY = -1;
-					this.draw1_dice = this.being1_dice;
-					this.draw1_dice2 = this.being2_dice;
-					this.addBattleLog();
+					this.turnBarY = 15;
+					this.draw2_dice = this.being1_dice;
+					this.draw2_dice2 = this.being2_dice;
+					this.updateBattleLog();
 					if(this.autoRoll == false) {
 						this.allowRoll = true;
 					} else {
 						this.roll();
 					}
 				}
-			} else if(this.turnBarY < 15) {
-				this.turnBarY += 0.8;
+			} else if(this.turnBarY > -1) {
+				this.turnBarY -= 0.8;
 			} else {
 				this.needUpdate = false;
-				this.turnBarY = 15;
-				this.draw2_dice = this.being1_dice;
-				this.draw2_dice2 = this.being2_dice;
-				this.addBattleLog();
+				this.turnBarY = -1;
+				this.draw1_dice = this.being1_dice;
+				this.draw1_dice2 = this.being2_dice;
+				this.updateBattleLog();
 				if(this.autoRoll == false) {
 					this.allowRoll = true;
 				} else {
@@ -942,9 +984,6 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		if(this.keys.h[82]) {
 			this.createGame();
 		}
-		if(this.keys.h[9]) {
-			this.getChance(5);
-		}
 	}
 	,onMouseDown: function(ddd) {
 		this.dice.tryRoll();
@@ -952,16 +991,16 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 	,createGame: function() {
 		this.hero = { race : game_data_Races.rndRace(), hp : 25 + Std.random(11), atk : 8 + Std.random(5)};
 		var word = "Добро пожаловать, " + game_data_Races.getName(this.hero.race) + "!";
-		haxe_Log.trace(word,{ fileName : "game/Game.hx", lineNumber : 57, className : "game.Game", methodName : "createGame"});
+		haxe_Log.trace(word,{ fileName : "game/Game.hx", lineNumber : 56, className : "game.Game", methodName : "createGame"});
 		this.dice.initBattle(false,this.hero,{ race : game_data_Races.rndRace(), hp : 25 + Std.random(11), atk : 8 + Std.random(5)});
 	}
 	,getChance: function(x) {
 		var d0 = Std.random(100);
 		if(d0 < x) {
-			haxe_Log.trace(d0 + "/" + x + ": true",{ fileName : "game/Game.hx", lineNumber : 70, className : "game.Game", methodName : "getChance"});
+			haxe_Log.trace(d0 + "/" + x + ": true",{ fileName : "game/Game.hx", lineNumber : 69, className : "game.Game", methodName : "getChance"});
 			return true;
 		}
-		haxe_Log.trace(d0 + "/" + x + ": false",{ fileName : "game/Game.hx", lineNumber : 73, className : "game.Game", methodName : "getChance"});
+		haxe_Log.trace(d0 + "/" + x + ": false",{ fileName : "game/Game.hx", lineNumber : 72, className : "game.Game", methodName : "getChance"});
 		return false;
 	}
 	,__class__: game_Game
@@ -4305,71 +4344,71 @@ kha_Shaders.init = function() {
 	blobs1.push(kha_internal_BytesBlob.fromBytes(bytes5));
 	kha_Shaders.painter_colored_vert = new kha_graphics4_VertexShader(blobs1,["painter-colored.vert.essl","painter-colored-webgl2.vert.essl","painter-colored-relaxed.vert.essl"]);
 	var blobs2 = [];
-	var data6 = Reflect.field(kha_Shaders,"painter_image_fragData" + 0);
+	var data6 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
 	var bytes6 = haxe_Unserializer.run(data6);
 	blobs2.push(kha_internal_BytesBlob.fromBytes(bytes6));
-	var data7 = Reflect.field(kha_Shaders,"painter_image_fragData" + 1);
+	var data7 = Reflect.field(kha_Shaders,"painter_text_fragData" + 1);
 	var bytes7 = haxe_Unserializer.run(data7);
 	blobs2.push(kha_internal_BytesBlob.fromBytes(bytes7));
-	var data8 = Reflect.field(kha_Shaders,"painter_image_fragData" + 2);
+	var data8 = Reflect.field(kha_Shaders,"painter_text_fragData" + 2);
 	var bytes8 = haxe_Unserializer.run(data8);
 	blobs2.push(kha_internal_BytesBlob.fromBytes(bytes8));
-	kha_Shaders.painter_image_frag = new kha_graphics4_FragmentShader(blobs2,["painter-image.frag.essl","painter-image-webgl2.frag.essl","painter-image-relaxed.frag.essl"]);
+	kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs2,["painter-text.frag.essl","painter-text-webgl2.frag.essl","painter-text-relaxed.frag.essl"]);
 	var blobs3 = [];
-	var data9 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
+	var data9 = Reflect.field(kha_Shaders,"painter_text_vertData" + 0);
 	var bytes9 = haxe_Unserializer.run(data9);
 	blobs3.push(kha_internal_BytesBlob.fromBytes(bytes9));
-	var data10 = Reflect.field(kha_Shaders,"painter_text_fragData" + 1);
+	var data10 = Reflect.field(kha_Shaders,"painter_text_vertData" + 1);
 	var bytes10 = haxe_Unserializer.run(data10);
 	blobs3.push(kha_internal_BytesBlob.fromBytes(bytes10));
-	var data11 = Reflect.field(kha_Shaders,"painter_text_fragData" + 2);
+	var data11 = Reflect.field(kha_Shaders,"painter_text_vertData" + 2);
 	var bytes11 = haxe_Unserializer.run(data11);
 	blobs3.push(kha_internal_BytesBlob.fromBytes(bytes11));
-	kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs3,["painter-text.frag.essl","painter-text-webgl2.frag.essl","painter-text-relaxed.frag.essl"]);
+	kha_Shaders.painter_text_vert = new kha_graphics4_VertexShader(blobs3,["painter-text.vert.essl","painter-text-webgl2.vert.essl","painter-text-relaxed.vert.essl"]);
 	var blobs4 = [];
-	var data12 = Reflect.field(kha_Shaders,"painter_image_vertData" + 0);
+	var data12 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
 	var bytes12 = haxe_Unserializer.run(data12);
 	blobs4.push(kha_internal_BytesBlob.fromBytes(bytes12));
-	var data13 = Reflect.field(kha_Shaders,"painter_image_vertData" + 1);
+	var data13 = Reflect.field(kha_Shaders,"painter_video_fragData" + 1);
 	var bytes13 = haxe_Unserializer.run(data13);
 	blobs4.push(kha_internal_BytesBlob.fromBytes(bytes13));
-	var data14 = Reflect.field(kha_Shaders,"painter_image_vertData" + 2);
+	var data14 = Reflect.field(kha_Shaders,"painter_video_fragData" + 2);
 	var bytes14 = haxe_Unserializer.run(data14);
 	blobs4.push(kha_internal_BytesBlob.fromBytes(bytes14));
-	kha_Shaders.painter_image_vert = new kha_graphics4_VertexShader(blobs4,["painter-image.vert.essl","painter-image-webgl2.vert.essl","painter-image-relaxed.vert.essl"]);
+	kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs4,["painter-video.frag.essl","painter-video-webgl2.frag.essl","painter-video-relaxed.frag.essl"]);
 	var blobs5 = [];
-	var data15 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
+	var data15 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
 	var bytes15 = haxe_Unserializer.run(data15);
 	blobs5.push(kha_internal_BytesBlob.fromBytes(bytes15));
-	var data16 = Reflect.field(kha_Shaders,"painter_video_fragData" + 1);
+	var data16 = Reflect.field(kha_Shaders,"painter_video_vertData" + 1);
 	var bytes16 = haxe_Unserializer.run(data16);
 	blobs5.push(kha_internal_BytesBlob.fromBytes(bytes16));
-	var data17 = Reflect.field(kha_Shaders,"painter_video_fragData" + 2);
+	var data17 = Reflect.field(kha_Shaders,"painter_video_vertData" + 2);
 	var bytes17 = haxe_Unserializer.run(data17);
 	blobs5.push(kha_internal_BytesBlob.fromBytes(bytes17));
-	kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs5,["painter-video.frag.essl","painter-video-webgl2.frag.essl","painter-video-relaxed.frag.essl"]);
+	kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs5,["painter-video.vert.essl","painter-video-webgl2.vert.essl","painter-video-relaxed.vert.essl"]);
 	var blobs6 = [];
-	var data18 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
+	var data18 = Reflect.field(kha_Shaders,"painter_image_fragData" + 0);
 	var bytes18 = haxe_Unserializer.run(data18);
 	blobs6.push(kha_internal_BytesBlob.fromBytes(bytes18));
-	var data19 = Reflect.field(kha_Shaders,"painter_video_vertData" + 1);
+	var data19 = Reflect.field(kha_Shaders,"painter_image_fragData" + 1);
 	var bytes19 = haxe_Unserializer.run(data19);
 	blobs6.push(kha_internal_BytesBlob.fromBytes(bytes19));
-	var data20 = Reflect.field(kha_Shaders,"painter_video_vertData" + 2);
+	var data20 = Reflect.field(kha_Shaders,"painter_image_fragData" + 2);
 	var bytes20 = haxe_Unserializer.run(data20);
 	blobs6.push(kha_internal_BytesBlob.fromBytes(bytes20));
-	kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs6,["painter-video.vert.essl","painter-video-webgl2.vert.essl","painter-video-relaxed.vert.essl"]);
+	kha_Shaders.painter_image_frag = new kha_graphics4_FragmentShader(blobs6,["painter-image.frag.essl","painter-image-webgl2.frag.essl","painter-image-relaxed.frag.essl"]);
 	var blobs7 = [];
-	var data21 = Reflect.field(kha_Shaders,"painter_text_vertData" + 0);
+	var data21 = Reflect.field(kha_Shaders,"painter_image_vertData" + 0);
 	var bytes21 = haxe_Unserializer.run(data21);
 	blobs7.push(kha_internal_BytesBlob.fromBytes(bytes21));
-	var data22 = Reflect.field(kha_Shaders,"painter_text_vertData" + 1);
+	var data22 = Reflect.field(kha_Shaders,"painter_image_vertData" + 1);
 	var bytes22 = haxe_Unserializer.run(data22);
 	blobs7.push(kha_internal_BytesBlob.fromBytes(bytes22));
-	var data23 = Reflect.field(kha_Shaders,"painter_text_vertData" + 2);
+	var data23 = Reflect.field(kha_Shaders,"painter_image_vertData" + 2);
 	var bytes23 = haxe_Unserializer.run(data23);
 	blobs7.push(kha_internal_BytesBlob.fromBytes(bytes23));
-	kha_Shaders.painter_text_vert = new kha_graphics4_VertexShader(blobs7,["painter-text.vert.essl","painter-text-webgl2.vert.essl","painter-text-relaxed.vert.essl"]);
+	kha_Shaders.painter_image_vert = new kha_graphics4_VertexShader(blobs7,["painter-image.vert.essl","painter-image-webgl2.vert.essl","painter-image-relaxed.vert.essl"]);
 };
 var kha_Sound = function() {
 };
@@ -21361,24 +21400,24 @@ kha_Shaders.painter_colored_fragData2 = "s192:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZW
 kha_Shaders.painter_colored_vertData0 = "s331:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgZnJhZ21lbnRDb2xvcjsKYXR0cmlidXRlIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgZnJhZ21lbnRDb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
 kha_Shaders.painter_colored_vertData1 = "s311:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWM0IGZyYWdtZW50Q29sb3I7CmluIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgZnJhZ21lbnRDb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
 kha_Shaders.painter_colored_vertData2 = "s374:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzQgZnJhZ21lbnRDb2xvcjsKYXR0cmlidXRlIG1lZGl1bXAgdmVjNCB2ZXJ0ZXhDb2xvcjsKCnZvaWQgbWFpbigpCnsKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbk1hdHJpeCAqIHZlYzQodmVydGV4UG9zaXRpb24sIDEuMCk7CiAgICBmcmFnbWVudENvbG9yID0gdmVydGV4Q29sb3I7Cn0KCg";
-kha_Shaders.painter_image_fragData0 = "s471:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKdmFyeWluZyBoaWdocCB2ZWMyIHRleENvb3JkOwp2YXJ5aW5nIGhpZ2hwIHZlYzQgY29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBoaWdocCB2ZWM0IHRleGNvbG9yID0gdGV4dHVyZTJEKHRleCwgdGV4Q29vcmQpICogY29sb3I7CiAgICBoaWdocCB2ZWMzIF8zMiA9IHRleGNvbG9yLnh5eiAqIGNvbG9yLnc7CiAgICB0ZXhjb2xvciA9IHZlYzQoXzMyLngsIF8zMi55LCBfMzIueiwgdGV4Y29sb3Iudyk7CiAgICBnbF9GcmFnRGF0YVswXSA9IHRleGNvbG9yOwp9Cgo";
-kha_Shaders.painter_image_fragData1 = "s487:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKaW4gaGlnaHAgdmVjMiB0ZXhDb29yZDsKaW4gaGlnaHAgdmVjNCBjb2xvcjsKb3V0IGhpZ2hwIHZlYzQgRnJhZ0NvbG9yOwoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUodGV4LCB0ZXhDb29yZCkgKiBjb2xvcjsKICAgIGhpZ2hwIHZlYzMgXzMyID0gdGV4Y29sb3IueHl6ICogY29sb3IudzsKICAgIHRleGNvbG9yID0gdmVjNChfMzIueCwgXzMyLnksIF8zMi56LCB0ZXhjb2xvci53KTsKICAgIEZyYWdDb2xvciA9IHRleGNvbG9yOwp9Cgo";
-kha_Shaders.painter_image_fragData2 = "s444:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gbWVkaXVtcCBpbnQ7Cgp1bmlmb3JtIG1lZGl1bXAgc2FtcGxlcjJEIHRleDsKCnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKdmFyeWluZyB2ZWM0IGNvbG9yOwoKdm9pZCBtYWluKCkKewogICAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUyRCh0ZXgsIHRleENvb3JkKSAqIGNvbG9yOwogICAgdmVjMyBfMzIgPSB0ZXhjb2xvci54eXogKiBjb2xvci53OwogICAgdGV4Y29sb3IgPSB2ZWM0KF8zMi54LCBfMzIueSwgXzMyLnosIHRleGNvbG9yLncpOwogICAgZ2xfRnJhZ0RhdGFbMF0gPSB0ZXhjb2xvcjsKfQoK";
 kha_Shaders.painter_text_fragData0 = "s351:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKdmFyeWluZyBoaWdocCB2ZWM0IGZyYWdtZW50Q29sb3I7CnZhcnlpbmcgaGlnaHAgdmVjMiB0ZXhDb29yZDsKCnZvaWQgbWFpbigpCnsKICAgIGdsX0ZyYWdEYXRhWzBdID0gdmVjNChmcmFnbWVudENvbG9yLnh5eiwgdGV4dHVyZTJEKHRleCwgdGV4Q29vcmQpLnggKiBmcmFnbWVudENvbG9yLncpOwp9Cgo";
 kha_Shaders.painter_text_fragData1 = "s367:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKb3V0IGhpZ2hwIHZlYzQgRnJhZ0NvbG9yOwppbiBoaWdocCB2ZWM0IGZyYWdtZW50Q29sb3I7CmluIGhpZ2hwIHZlYzIgdGV4Q29vcmQ7Cgp2b2lkIG1haW4oKQp7CiAgICBGcmFnQ29sb3IgPSB2ZWM0KGZyYWdtZW50Q29sb3IueHl6LCB0ZXh0dXJlKHRleCwgdGV4Q29vcmQpLnggKiBmcmFnbWVudENvbG9yLncpOwp9Cgo";
 kha_Shaders.painter_text_fragData2 = "s340:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gbWVkaXVtcCBpbnQ7Cgp1bmlmb3JtIG1lZGl1bXAgc2FtcGxlcjJEIHRleDsKCnZhcnlpbmcgdmVjNCBmcmFnbWVudENvbG9yOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9GcmFnRGF0YVswXSA9IHZlYzQoZnJhZ21lbnRDb2xvci54eXosIHRleHR1cmUyRCh0ZXgsIHRleENvb3JkKS54ICogZnJhZ21lbnRDb2xvci53KTsKfQoK";
-kha_Shaders.painter_image_vertData0 = "s415:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgY29sb3I7CmF0dHJpYnV0ZSB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
-kha_Shaders.painter_image_vertData1 = "s380:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleFBvc2l0aW9uOwpvdXQgdmVjNCBjb2xvcjsKaW4gdmVjNCB2ZXJ0ZXhDb2xvcjsKCnZvaWQgbWFpbigpCnsKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbk1hdHJpeCAqIHZlYzQodmVydGV4UG9zaXRpb24sIDEuMCk7CiAgICB0ZXhDb29yZCA9IHRleFBvc2l0aW9uOwogICAgY29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
-kha_Shaders.painter_image_vertData2 = "s479:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzIgdGV4UG9zaXRpb247CnZhcnlpbmcgbWVkaXVtcCB2ZWM0IGNvbG9yOwphdHRyaWJ1dGUgbWVkaXVtcCB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
+kha_Shaders.painter_text_vertData0 = "s436:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgZnJhZ21lbnRDb2xvcjsKYXR0cmlidXRlIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgdGV4Q29vcmQgPSB0ZXhQb3NpdGlvbjsKICAgIGZyYWdtZW50Q29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
+kha_Shaders.painter_text_vertData1 = "s402:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleFBvc2l0aW9uOwpvdXQgdmVjNCBmcmFnbWVudENvbG9yOwppbiB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBmcmFnbWVudENvbG9yID0gdmVydGV4Q29sb3I7Cn0KCg";
+kha_Shaders.painter_text_vertData2 = "s500:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzIgdGV4UG9zaXRpb247CnZhcnlpbmcgbWVkaXVtcCB2ZWM0IGZyYWdtZW50Q29sb3I7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgdGV4Q29vcmQgPSB0ZXhQb3NpdGlvbjsKICAgIGZyYWdtZW50Q29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
 kha_Shaders.painter_video_fragData0 = "s471:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKdmFyeWluZyBoaWdocCB2ZWMyIHRleENvb3JkOwp2YXJ5aW5nIGhpZ2hwIHZlYzQgY29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBoaWdocCB2ZWM0IHRleGNvbG9yID0gdGV4dHVyZTJEKHRleCwgdGV4Q29vcmQpICogY29sb3I7CiAgICBoaWdocCB2ZWMzIF8zMiA9IHRleGNvbG9yLnh5eiAqIGNvbG9yLnc7CiAgICB0ZXhjb2xvciA9IHZlYzQoXzMyLngsIF8zMi55LCBfMzIueiwgdGV4Y29sb3Iudyk7CiAgICBnbF9GcmFnRGF0YVswXSA9IHRleGNvbG9yOwp9Cgo";
 kha_Shaders.painter_video_fragData1 = "s487:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKaW4gaGlnaHAgdmVjMiB0ZXhDb29yZDsKaW4gaGlnaHAgdmVjNCBjb2xvcjsKb3V0IGhpZ2hwIHZlYzQgRnJhZ0NvbG9yOwoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUodGV4LCB0ZXhDb29yZCkgKiBjb2xvcjsKICAgIGhpZ2hwIHZlYzMgXzMyID0gdGV4Y29sb3IueHl6ICogY29sb3IudzsKICAgIHRleGNvbG9yID0gdmVjNChfMzIueCwgXzMyLnksIF8zMi56LCB0ZXhjb2xvci53KTsKICAgIEZyYWdDb2xvciA9IHRleGNvbG9yOwp9Cgo";
 kha_Shaders.painter_video_fragData2 = "s444:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gbWVkaXVtcCBpbnQ7Cgp1bmlmb3JtIG1lZGl1bXAgc2FtcGxlcjJEIHRleDsKCnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKdmFyeWluZyB2ZWM0IGNvbG9yOwoKdm9pZCBtYWluKCkKewogICAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUyRCh0ZXgsIHRleENvb3JkKSAqIGNvbG9yOwogICAgdmVjMyBfMzIgPSB0ZXhjb2xvci54eXogKiBjb2xvci53OwogICAgdGV4Y29sb3IgPSB2ZWM0KF8zMi54LCBfMzIueSwgXzMyLnosIHRleGNvbG9yLncpOwogICAgZ2xfRnJhZ0RhdGFbMF0gPSB0ZXhjb2xvcjsKfQoK";
 kha_Shaders.painter_video_vertData0 = "s415:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgY29sb3I7CmF0dHJpYnV0ZSB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
 kha_Shaders.painter_video_vertData1 = "s380:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleFBvc2l0aW9uOwpvdXQgdmVjNCBjb2xvcjsKaW4gdmVjNCB2ZXJ0ZXhDb2xvcjsKCnZvaWQgbWFpbigpCnsKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbk1hdHJpeCAqIHZlYzQodmVydGV4UG9zaXRpb24sIDEuMCk7CiAgICB0ZXhDb29yZCA9IHRleFBvc2l0aW9uOwogICAgY29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
 kha_Shaders.painter_video_vertData2 = "s479:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzIgdGV4UG9zaXRpb247CnZhcnlpbmcgbWVkaXVtcCB2ZWM0IGNvbG9yOwphdHRyaWJ1dGUgbWVkaXVtcCB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
-kha_Shaders.painter_text_vertData0 = "s436:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgZnJhZ21lbnRDb2xvcjsKYXR0cmlidXRlIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgdGV4Q29vcmQgPSB0ZXhQb3NpdGlvbjsKICAgIGZyYWdtZW50Q29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
-kha_Shaders.painter_text_vertData1 = "s402:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleFBvc2l0aW9uOwpvdXQgdmVjNCBmcmFnbWVudENvbG9yOwppbiB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBmcmFnbWVudENvbG9yID0gdmVydGV4Q29sb3I7Cn0KCg";
-kha_Shaders.painter_text_vertData2 = "s500:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzIgdGV4UG9zaXRpb247CnZhcnlpbmcgbWVkaXVtcCB2ZWM0IGZyYWdtZW50Q29sb3I7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgdGV4Q29vcmQgPSB0ZXhQb3NpdGlvbjsKICAgIGZyYWdtZW50Q29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
+kha_Shaders.painter_image_fragData0 = "s471:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKdmFyeWluZyBoaWdocCB2ZWMyIHRleENvb3JkOwp2YXJ5aW5nIGhpZ2hwIHZlYzQgY29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBoaWdocCB2ZWM0IHRleGNvbG9yID0gdGV4dHVyZTJEKHRleCwgdGV4Q29vcmQpICogY29sb3I7CiAgICBoaWdocCB2ZWMzIF8zMiA9IHRleGNvbG9yLnh5eiAqIGNvbG9yLnc7CiAgICB0ZXhjb2xvciA9IHZlYzQoXzMyLngsIF8zMi55LCBfMzIueiwgdGV4Y29sb3Iudyk7CiAgICBnbF9GcmFnRGF0YVswXSA9IHRleGNvbG9yOwp9Cgo";
+kha_Shaders.painter_image_fragData1 = "s487:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKaW4gaGlnaHAgdmVjMiB0ZXhDb29yZDsKaW4gaGlnaHAgdmVjNCBjb2xvcjsKb3V0IGhpZ2hwIHZlYzQgRnJhZ0NvbG9yOwoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUodGV4LCB0ZXhDb29yZCkgKiBjb2xvcjsKICAgIGhpZ2hwIHZlYzMgXzMyID0gdGV4Y29sb3IueHl6ICogY29sb3IudzsKICAgIHRleGNvbG9yID0gdmVjNChfMzIueCwgXzMyLnksIF8zMi56LCB0ZXhjb2xvci53KTsKICAgIEZyYWdDb2xvciA9IHRleGNvbG9yOwp9Cgo";
+kha_Shaders.painter_image_fragData2 = "s444:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gbWVkaXVtcCBpbnQ7Cgp1bmlmb3JtIG1lZGl1bXAgc2FtcGxlcjJEIHRleDsKCnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKdmFyeWluZyB2ZWM0IGNvbG9yOwoKdm9pZCBtYWluKCkKewogICAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUyRCh0ZXgsIHRleENvb3JkKSAqIGNvbG9yOwogICAgdmVjMyBfMzIgPSB0ZXhjb2xvci54eXogKiBjb2xvci53OwogICAgdGV4Y29sb3IgPSB2ZWM0KF8zMi54LCBfMzIueSwgXzMyLnosIHRleGNvbG9yLncpOwogICAgZ2xfRnJhZ0RhdGFbMF0gPSB0ZXhjb2xvcjsKfQoK";
+kha_Shaders.painter_image_vertData0 = "s415:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgY29sb3I7CmF0dHJpYnV0ZSB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
+kha_Shaders.painter_image_vertData1 = "s380:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleFBvc2l0aW9uOwpvdXQgdmVjNCBjb2xvcjsKaW4gdmVjNCB2ZXJ0ZXhDb2xvcjsKCnZvaWQgbWFpbigpCnsKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbk1hdHJpeCAqIHZlYzQodmVydGV4UG9zaXRpb24sIDEuMCk7CiAgICB0ZXhDb29yZCA9IHRleFBvc2l0aW9uOwogICAgY29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
+kha_Shaders.painter_image_vertData2 = "s479:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzIgdGV4UG9zaXRpb247CnZhcnlpbmcgbWVkaXVtcCB2ZWM0IGNvbG9yOwphdHRyaWJ1dGUgbWVkaXVtcCB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
 kha_System.renderListeners = [];
 kha_System.foregroundListeners = [];
 kha_System.resumeListeners = [];
