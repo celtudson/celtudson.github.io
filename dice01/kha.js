@@ -1026,21 +1026,13 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		}
 	}
 	,onMouseDown: function(ddd) {
+		this.dice.tryRoll();
 	}
 	,createGame: function() {
 		this.hero = { race : game_data_Races.rndRace(), hp : 25 + Std.random(11), atk : 8 + Std.random(5)};
 		var word = "Добро пожаловать, " + game_data_Races.getName(this.hero.race) + "!";
-		haxe_Log.trace(word,{ fileName : "game/Game.hx", lineNumber : 57, className : "game.Game", methodName : "createGame"});
+		haxe_Log.trace(word,{ fileName : "game/Game.hx", lineNumber : 58, className : "game.Game", methodName : "createGame"});
 		this.dice.initBattle(false,this.hero,{ race : game_data_Races.rndRace(), hp : 25 + Std.random(11), atk : 8 + Std.random(5)});
-	}
-	,getChance: function(x) {
-		var d0 = Std.random(100);
-		if(d0 < x) {
-			haxe_Log.trace(d0 + "/" + x + ": true",{ fileName : "game/Game.hx", lineNumber : 70, className : "game.Game", methodName : "getChance"});
-			return true;
-		}
-		haxe_Log.trace(d0 + "/" + x + ": false",{ fileName : "game/Game.hx", lineNumber : 73, className : "game.Game", methodName : "getChance"});
-		return false;
 	}
 	,__class__: game_Game
 });
