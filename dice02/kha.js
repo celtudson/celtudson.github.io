@@ -231,8 +231,8 @@ Main.main = function() {
 		window.document.body.style.padding = "0";
 		window.document.body.style.margin = "0";
 		var canvas = window.document.getElementById(kha_CompilerDefines.canvas_id);
-		canvas.width = 384;
-		canvas.height = 288;
+		canvas.width = 576;
+		canvas.height = 432;
 		var loader = new Loader();
 		loader.show();
 	});
