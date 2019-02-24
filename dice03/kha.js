@@ -348,7 +348,8 @@ var game_Battle = function() {
 	this.hp1YFade = 0;
 	this.hp2Y = 0;
 	this.hp1Y = 0;
-	this.tempBattleLog = [];
+	this.being2OldHp = 0;
+	this.being1OldHp = 0;
 	this.battleLogColor = [];
 	this.battleLog = [];
 	this.y = 200;
@@ -362,50 +363,80 @@ $hxClasses["game.Battle"] = game_Battle;
 game_Battle.__name__ = true;
 game_Battle.prototype = {
 	dice: null
-	,being1: null
-	,being2: null
+	,resultDice: null
+	,hero: null
+	,enemy: null
 	,x: null
 	,y: null
 	,gameScale: null
 	,battleLog: null
 	,battleLogColor: null
-	,tempBattleLog: null
 	,imgAbils: null
 	,imgHBar: null
 	,imgHBarBG: null
+	,being1OldHp: null
+	,being2OldHp: null
 	,hp1Y: null
 	,hp2Y: null
 	,hp1YFade: null
 	,hp2YFade: null
-	,newHp: null
-	,being1OldHp: null
-	,being2OldHp: null
 	,startBattle: function(heroFirst,b1,b2) {
-		this.being1 = b1;
-		this.being2 = b2;
+		this.hero = { hp : b1.hp, maxHp : b1.hp, atk : b1.atk, abils : game_data_Abilities.get(b1.abils)};
+		this.enemy = { hp : b2.hp, maxHp : b2.hp, atk : b2.atk, abils : []};
 		this.x = 16;
 		this.y = 200;
 		this.battleLog.length = 0;
 		this.battleLogColor.length = 0;
-		this.tempBattleLog.length = 0;
 		this.hp1Y = 0;
 		this.hp2Y = 0;
 		this.hp1YFade = 0;
 		this.hp2YFade = 0;
-		this.being1OldHp = this.being1.hp;
-		this.being2OldHp = this.being2.hp;
 		this.battleLog.push((heroFirst ? "Вы напали на " : "На Вас напал ") + game_data_Races.getName(b2.race));
 		this.battleLogColor.push(0);
 		this.dice.reset(heroFirst);
 		this.nextTurn();
 	}
-	,nextTurn: function() {
-		var resultDice = this.dice.tryRoll();
-		if(resultDice < -5) {
+	,onMouseDown: function(p) {
+		if(p.y < this.y || p.x < this.x + 4 || p.x >= this.x + 248) {
 			return;
 		}
+		var mouseX = p.x - this.x - 4;
+		var slotId = -1;
+		if(mouseX >= 92 && mouseX < 152) {
+			this.nextTurn();
+		} else if(mouseX < 82) {
+			slotId = mouseX / 28 | 0;
+			if(this.hero.abils[slotId] == null) {
+				slotId = -1;
+			}
+		}
+		if(slotId == -1) {
+			return;
+		}
+		var abil = this.hero.abils[slotId];
+		haxe_Log.trace(abil,{ fileName : "game/Battle.hx", lineNumber : 92, className : "game.Battle", methodName : "onMouseDown"});
+		if(this.dice.nextTurn == false) {
+			if(abil.phase == 0) {
+				return;
+			}
+		} else if(abil.phase == 1) {
+			return;
+		}
+		if(abil.cool == 0) {
+			abil.cool = abil.coolValue;
+			abil.coolValue = abil.coolValue * abil.coolRise | 0;
+		}
+	}
+	,nextTurn: function() {
+		var d0 = this.dice.tryRoll();
+		if(d0 != null) {
+			this.resultDice = d0;
+		}
+	}
+	,updateState: function(autoRoll) {
+		var result = this.resultDice[0] - this.resultDice[1];
 		var multi = 0;
-		switch(resultDice) {
+		switch(result) {
 		case -2:
 			multi = 0.45;
 			break;
@@ -428,45 +459,98 @@ game_Battle.prototype = {
 			multi = 3;
 			break;
 		}
-		var atk = this.being1;
-		var dfn = this.being2;
+		var atk = this.hero;
+		var dfn = this.enemy;
 		if(this.dice.nextTurn == true) {
 			var d0 = atk;
 			atk = dfn;
 			dfn = d0;
 		}
-		switch(resultDice) {
+		if(this.dice.lastDiceContr == false) {
+			this.addBattleLog("");
+			this.addBattleLog((this.dice.nextTurn ? "Игрок" : "Противник") + " делает свой ход");
+		}
+		this.addBattleLog("Результат бросков кубика: " + this.resultDice[0] + " - " + this.resultDice[1] + " = " + result);
+		switch(result) {
 		case -5:
 			this.dice.setContr();
-			this.addTempBattleLog(this.dice.getName() + " контратакует!",this.dice.nextTurn ? 2 : 1);
+			this.addBattleLog((this.dice.nextTurn ? "Игрок" : "Противник") + " контратакует!",this.dice.nextTurn ? 2 : 1);
 			return;
 		case -4:case -3:
-			this.addTempBattleLog("Промах!",this.dice.nextTurn ? 2 : 1);
+			this.addBattleLog("Промах!",this.dice.nextTurn ? 2 : 1);
 			break;
 		case 0:
-			this.addTempBattleLog("Синхронно скрестили клинки!",this.dice.nextTurn ? 2 : 1);
+			this.addBattleLog("Синхронно скрестили клинки!",this.dice.nextTurn ? 2 : 1);
 			break;
 		case 5:
 			var line = this.dice.nextTurn ? "Удар в слабое место!" : "Великолепное попадание!";
-			this.addTempBattleLog(line,this.dice.nextTurn ? 1 : 2);
+			this.addBattleLog(line,this.dice.nextTurn ? 1 : 2);
 			break;
 		}
 		var damage = 0;
 		var line1 = "";
-		if(resultDice == 0) {
+		if(result == 0) {
 			damage = 1;
-			line1 += this.dice.getName() + " получает 1 урона!";
+			line1 += (this.dice.nextTurn ? "Игрок" : "Противник") + " получает 1 урона!";
 		} else {
 			damage = (multi * atk.atk * 10 | 0) / 10;
-			line1 += this.dice.getName() + (multi == 0 ? " получает " + damage + " урона!" : " получает " + multi + " * " + atk.atk + " = " + damage + " урона!");
+			if(multi > 0 && damage < 1) {
+				damage = 1;
+			}
+			line1 += (this.dice.nextTurn ? "Игрок" : "Противник") + (multi == 0 ? " получает " + damage + " урона!" : " получает " + multi + " * " + atk.atk + " = " + damage + " урона!");
 		}
 		dfn.hp -= damage;
 		dfn.hp = (dfn.hp * 10 | 0) / 10;
-		this.newHp = dfn.hp;
 		if(damage == 0) {
-			this.addTempBattleLog(line1);
+			this.addBattleLog(line1);
 		} else {
-			this.addTempBattleLog(line1,this.dice.nextTurn ? 1 : 2);
+			this.addBattleLog(line1,this.dice.nextTurn ? 1 : 2);
+		}
+		if(this.dice.nextTurn == false) {
+			var _g = 0;
+			var _g1 = this.enemy.abils;
+			while(_g < _g1.length) {
+				var abil = _g1[_g];
+				++_g;
+				if(abil.cool > 0) {
+					abil.cool--;
+				}
+			}
+		} else {
+			var _g2 = 0;
+			var _g11 = this.hero.abils;
+			while(_g2 < _g11.length) {
+				var abil1 = _g11[_g2];
+				++_g2;
+				if(abil1.cool > 0) {
+					abil1.cool--;
+				}
+			}
+		}
+		if(this.hero.hp <= 0) {
+			this.hero.hp = this.hero.maxHp;
+		}
+		if(this.enemy.hp <= 0) {
+			this.enemy.hp = this.enemy.maxHp;
+		}
+		if(autoRoll == false) {
+			if(this.dice.nextTurn == false) {
+				if(this.being2OldHp != dfn.hp) {
+					this.being2OldHp = dfn.hp;
+					this.hp2YFade = this.hp2Y;
+				}
+				if(this.hp2Y < 41) {
+					this.hp2Y = 41 - 41 / this.enemy.maxHp * this.enemy.hp;
+				}
+			} else {
+				if(this.being1OldHp != dfn.hp) {
+					this.being1OldHp = dfn.hp;
+					this.hp1YFade = this.hp1Y;
+				}
+				if(this.hp1Y < 41) {
+					this.hp1Y = 41 - 41 / this.hero.maxHp * this.hero.hp;
+				}
+			}
 		}
 	}
 	,update: function() {
@@ -478,37 +562,11 @@ game_Battle.prototype = {
 			this.hp2YFade += 0.1;
 		}
 	}
-	,updateGui: function(autoRoll) {
-		this.updateBattleLog();
-		if(autoRoll == false) {
-			if(this.dice.nextTurn == false) {
-				if(this.being2OldHp != this.newHp) {
-					this.hp2YFade = this.hp2Y;
-				}
-				this.being2OldHp = this.newHp;
-				if(this.hp2Y < 41) {
-					this.hp2Y = 41 - 41 / this.being2.maxHp * this.being2.hp;
-				}
-			} else {
-				if(this.being1OldHp != this.newHp) {
-					this.hp1YFade = this.hp1Y;
-				}
-				this.being1OldHp = this.newHp;
-				if(this.hp1Y < 41) {
-					this.hp1Y = 41 - 41 / this.being1.maxHp * this.being1.hp;
-				}
-			}
-		}
-	}
 	,render: function(g) {
 		g.set_color(-13418933);
 		g.fillRect(this.x,this.y - 200,252,200);
-		g.set_color(-7114533);
-		g.fillRect(this.x,this.y,4,4);
 		g.set_color(-12156236);
 		g.fillRect(this.x,this.y,96,50);
-		g.set_color(-2354116);
-		g.fillRect(this.x + 100 + 56,this.y,96,50);
 		var l = this.battleLog.length;
 		var _g = 0;
 		var _g1 = l;
@@ -544,8 +602,9 @@ game_Battle.prototype = {
 		_this._22 = transformation._22;
 		var scaledX = this.x / scale;
 		var scaledY = this.y / scale;
-		g.drawString("" + this.being1OldHp,136,50);
-		g.drawString("" + this.being2OldHp,136,64);
+		g.drawString("" + this.enemy.hp,136,50);
+		g.drawString("" + this.hero.hp,136,64);
+		g.drawString("" + Std.string(this.dice.nextTurn),136,78);
 		g.drawScaledImage(this.imgHBarBG,scaledX + 48,scaledY,-this.imgHBarBG.get_width(),this.imgHBarBG.get_height());
 		g.drawImage(this.imgHBarBG,scaledX + 78,scaledY);
 		g.set_color(-65536);
@@ -554,33 +613,38 @@ game_Battle.prototype = {
 		g.set_color(-1);
 		g.drawScaledImage(this.imgHBar,scaledX + 48,scaledY + 1 + this.hp1Y,-this.imgHBar.get_width(),this.imgHBar.get_height());
 		g.drawImage(this.imgHBar,scaledX + 78,scaledY + 1 + this.hp2Y);
+		var _g2 = 0;
+		var _g3 = this.hero.abils.length;
+		while(_g2 < _g3) {
+			var i1 = _g2++;
+			var abil = this.hero.abils[i1];
+			var x = scaledX + 2 + i1 * 14;
+			var y = scaledY + 2;
+			if(abil.cool == 0) {
+				g.set_color(-1);
+			} else {
+				g.set_color(1728053247);
+			}
+			g.drawSubImage(this.imgAbils,x,y,13 * abil.id,0,13,13);
+			if(abil.cool > 0) {
+				g.set_color(-16777216);
+				g.drawString("" + abil.cool,x,y);
+			}
+		}
 	}
-	,addTempBattleLog: function(line,color) {
+	,addBattleLog: function(line,color) {
 		if(color == null) {
 			color = 0;
 		}
-		this.tempBattleLog.push(line);
+		this.battleLog.push(line);
 		this.battleLogColor.push(color);
-		haxe_Log.trace(line,{ fileName : "game/Battle.hx", lineNumber : 201, className : "game.Battle", methodName : "addTempBattleLog"});
+		haxe_Log.trace(line,{ fileName : "game/Battle.hx", lineNumber : 260, className : "game.Battle", methodName : "addBattleLog"});
 	}
-	,updateBattleLog: function() {
-		var _g = 0;
-		var _g1 = this.tempBattleLog;
-		while(_g < _g1.length) {
-			var i = _g1[_g];
-			++_g;
-			this.battleLog.push(i);
-		}
-		this.tempBattleLog.length = 0;
-		if(this.battleLog.length > 14) {
-			var d0 = this.battleLog.length - 14;
-			var _g2 = 0;
-			var _g3 = d0;
-			while(_g2 < _g3) {
-				var i1 = _g2++;
-				this.battleLog.shift();
-				this.battleLogColor.shift();
-			}
+	,getName: function() {
+		if(this.dice.nextTurn) {
+			return "Игрок";
+		} else {
+			return "Противник";
 		}
 	}
 	,getDamageText: function(multi,atk,damage) {
@@ -622,10 +686,10 @@ game_Dice.__name__ = true;
 game_Dice.prototype = {
 	battle: null
 	,nextTurn: null
-	,allowRoll: null
-	,autoRoll: null
-	,needUpdate: null
 	,lastDiceContr: null
+	,allowRoll: null
+	,contrRoll: null
+	,needUpdate: null
 	,being1_dice: null
 	,being2_dice: null
 	,imgDagger: null
@@ -639,16 +703,9 @@ game_Dice.prototype = {
 	,draw1_dice2: null
 	,draw2_dice: null
 	,draw2_dice2: null
-	,getName: function() {
-		if(this.nextTurn) {
-			return "Игрок";
-		} else {
-			return "Противник";
-		}
-	}
 	,reset: function(heroFirst) {
 		this.allowRoll = true;
-		this.autoRoll = false;
+		this.contrRoll = false;
 		this.lastDiceContr = false;
 		if(heroFirst == false) {
 			this.nextTurn = false;
@@ -662,15 +719,15 @@ game_Dice.prototype = {
 		if(this.allowRoll) {
 			return this.roll();
 		}
-		return -6;
+		return null;
 	}
 	,setContr: function() {
+		this.contrRoll = true;
 		this.lastDiceContr = true;
-		this.autoRoll = true;
 	}
 	,roll: function() {
 		if(this.lastDiceContr) {
-			if(this.autoRoll == false) {
+			if(this.contrRoll == false) {
 				this.lastDiceContr = false;
 				this.nextTurn = !this.nextTurn;
 				this.setRotate(null,2 * -Math.PI);
@@ -681,16 +738,13 @@ game_Dice.prototype = {
 			this.setRotate(null,-Math.PI);
 		}
 		this.allowRoll = false;
-		this.autoRoll = false;
-		this.battle.addTempBattleLog("");
-		if(this.lastDiceContr == false) {
-			this.battle.addTempBattleLog(this.getName() + " делает свой ход");
-		}
+		this.contrRoll = false;
+		var tmp = this.lastDiceContr == false;
 		this.nextTurn = !this.nextTurn;
 		this.needUpdate = true;
-		var atkDice = Std.random(6) + 1;
-		var dfnDice = Std.random(6) + 1;
-		var resultDice = atkDice - dfnDice;
+		var atkDice = Std.random(2) + 1;
+		var dfnDice = Std.random(2) + 5;
+		var resultDice = [atkDice,dfnDice];
 		if(this.nextTurn == false) {
 			this.being1_dice = atkDice;
 			this.being2_dice = dfnDice;
@@ -698,7 +752,6 @@ game_Dice.prototype = {
 			this.being1_dice = dfnDice;
 			this.being2_dice = atkDice;
 		}
-		this.battle.addTempBattleLog("Результат бросков кубика: " + atkDice + " - " + dfnDice + " = " + resultDice);
 		return resultDice;
 	}
 	,setRotate: function(now,delta) {
@@ -739,8 +792,8 @@ game_Dice.prototype = {
 					this.draw1_dice = this.being1_dice;
 					this.draw1_dice2 = this.being2_dice;
 				}
-				this.battle.updateGui(this.autoRoll);
-				if(this.autoRoll == false) {
+				this.battle.updateState(this.contrRoll);
+				if(this.contrRoll == false) {
 					this.allowRoll = true;
 				} else {
 					this.allowRoll = true;
@@ -1124,12 +1177,12 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		this.createGame();
 	}
 	,onKeyDown: function(key) {
-		if(this.keys.h[82]) {
+		if(key == 82) {
 			this.createGame();
 		}
 	}
-	,onMouseDown: function(ddd) {
-		this.battle.nextTurn();
+	,onMouseDown: function(p) {
+		this.battle.onMouseDown(p);
 	}
 	,onUpdate: function() {
 		game_Game.screenW = khm_Screen.w;
@@ -1164,9 +1217,9 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 	}
 	,createGame: function() {
 		var hp = 25 + Std.random(11);
-		this.hero = { race : game_data_Races.rndRace(), abils : [1,2,4], hp : hp, maxHp : hp, atk : 8 + Std.random(5)};
+		this.hero = { race : game_data_Races.rndRace(), abils : [0], hp : hp, maxHp : hp, atk : 8 + Std.random(5)};
 		var hp1 = 25 + Std.random(11);
-		this.battle.startBattle(false,this.hero,{ race : game_data_Races.rndRace(), abils : [3,4,1], hp : hp1, maxHp : hp1, atk : 8 + Std.random(5)});
+		this.battle.startBattle(false,this.hero,{ race : game_data_Races.rndRace(), abils : [], hp : hp1, maxHp : hp1, atk : 8 + Std.random(5)});
 	}
 	,__class__: game_Game
 });
@@ -1314,12 +1367,23 @@ game_Map.prototype = {
 	,__class__: game_Map
 };
 var game_data_Abilities = function() {
-	game_data_Abilities.abils[0] = { name : "Отказ", needAP : 3, initCool : 4, cooldown : 4};
+	game_data_Abilities.abilsData[0] = { name : "Отказ", phase : 0, needAP : 6, initCool : 4, coolValue : 4, coolRise : 1.5};
+	game_data_Abilities.abilsData[1] = { name : "Берсерк", phase : 2, needAP : 3, initCool : 6, coolValue : 4, coolRise : 1};
 };
 $hxClasses["game.data.Abilities"] = game_data_Abilities;
 game_data_Abilities.__name__ = true;
-game_data_Abilities.getName = function(id) {
-	return game_data_Abilities.abils[id].name;
+game_data_Abilities.get = function(needAbils) {
+	var d0 = [];
+	var _g = 0;
+	while(_g < needAbils.length) {
+		var abil = needAbils[_g];
+		++_g;
+		if(abil > game_data_Abilities.abilsData.length - 1) {
+			continue;
+		}
+		d0.push({ id : abil, name : game_data_Abilities.abilsData[abil].name, phase : game_data_Abilities.abilsData[abil].phase, needAp : game_data_Abilities.abilsData[abil].needAP, cool : game_data_Abilities.abilsData[abil].initCool, coolValue : game_data_Abilities.abilsData[abil].coolValue, coolRise : game_data_Abilities.abilsData[abil].coolRise});
+	}
+	return d0;
 };
 game_data_Abilities.prototype = {
 	__class__: game_data_Abilities
@@ -1332,11 +1396,11 @@ var game_data_Races = function() {
 };
 $hxClasses["game.data.Races"] = game_data_Races;
 game_data_Races.__name__ = true;
-game_data_Races.getName = function(id) {
-	return game_data_Races.race[id].name;
-};
 game_data_Races.rndRace = function() {
 	return Std.random(game_data_Races.race.length);
+};
+game_data_Races.getName = function(id) {
+	return game_data_Races.race[id].name;
 };
 game_data_Races.prototype = {
 	__class__: game_data_Races
@@ -2602,7 +2666,7 @@ js_html__$ArrayBuffer_ArrayBufferCompat.sliceImpl = function(begin,end) {
 	return resultArray.buffer;
 };
 var kha__$Assets_ImageList = function() {
-	this.names = ["dagger","abils","dice","health","health_bg","map"];
+	this.names = ["abils","dagger","dice","health","health_bg","map"];
 	this.mapDescription = { name : "map", original_height : 280, original_width : 280, files : ["map.png"], type : "image"};
 	this.mapName = "map";
 	this.map = null;
@@ -2615,40 +2679,18 @@ var kha__$Assets_ImageList = function() {
 	this.diceDescription = { name : "dice", original_height : 11, original_width : 66, files : ["dice.png"], type : "image"};
 	this.diceName = "dice";
 	this.dice = null;
-	this.abilsDescription = { name : "abils", original_height : 13, original_width : 325, files : ["abils.png"], type : "image"};
-	this.abilsName = "abils";
-	this.abils = null;
 	this.daggerDescription = { name : "dagger", original_height : 18, original_width : 12, files : ["dagger.png"], type : "image"};
 	this.daggerName = "dagger";
 	this.dagger = null;
+	this.abilsDescription = { name : "abils", original_height : 13, original_width : 325, files : ["abils.png"], type : "image"};
+	this.abilsName = "abils";
+	this.abils = null;
 };
 $hxClasses["kha._Assets.ImageList"] = kha__$Assets_ImageList;
 kha__$Assets_ImageList.__name__ = true;
 kha__$Assets_ImageList.prototype = {
 	get: function(name) {
 		return Reflect.field(this,name);
-	}
-	,dagger: null
-	,daggerName: null
-	,daggerDescription: null
-	,daggerLoad: function(done,failure) {
-		var tmp;
-		if(failure != null) {
-			tmp = failure;
-		} else {
-			var f = haxe_Log.trace;
-			var infos = { fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "daggerLoad"};
-			tmp = function(v) {
-				f(v,infos);
-			};
-		}
-		kha_Assets.loadImage("dagger",function(image) {
-			done();
-		},tmp,{ fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "daggerLoad"});
-	}
-	,daggerUnload: function() {
-		this.dagger.unload();
-		this.dagger = null;
 	}
 	,abils: null
 	,abilsName: null
@@ -2671,6 +2713,28 @@ kha__$Assets_ImageList.prototype = {
 	,abilsUnload: function() {
 		this.abils.unload();
 		this.abils = null;
+	}
+	,dagger: null
+	,daggerName: null
+	,daggerDescription: null
+	,daggerLoad: function(done,failure) {
+		var tmp;
+		if(failure != null) {
+			tmp = failure;
+		} else {
+			var f = haxe_Log.trace;
+			var infos = { fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "daggerLoad"};
+			tmp = function(v) {
+				f(v,infos);
+			};
+		}
+		kha_Assets.loadImage("dagger",function(image) {
+			done();
+		},tmp,{ fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "daggerLoad"});
+	}
+	,daggerUnload: function() {
+		this.dagger.unload();
+		this.dagger = null;
 	}
 	,dice: null
 	,diceName: null
@@ -4785,16 +4849,16 @@ kha_Shaders.init = function() {
 	blobs3.push(kha_internal_BytesBlob.fromBytes(bytes11));
 	kha_Shaders.painter_image_vert = new kha_graphics4_VertexShader(blobs3,["painter-image.vert.essl","painter-image-webgl2.vert.essl","painter-image-relaxed.vert.essl"]);
 	var blobs4 = [];
-	var data12 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
+	var data12 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
 	var bytes12 = haxe_Unserializer.run(data12);
 	blobs4.push(kha_internal_BytesBlob.fromBytes(bytes12));
-	var data13 = Reflect.field(kha_Shaders,"painter_text_fragData" + 1);
+	var data13 = Reflect.field(kha_Shaders,"painter_video_vertData" + 1);
 	var bytes13 = haxe_Unserializer.run(data13);
 	blobs4.push(kha_internal_BytesBlob.fromBytes(bytes13));
-	var data14 = Reflect.field(kha_Shaders,"painter_text_fragData" + 2);
+	var data14 = Reflect.field(kha_Shaders,"painter_video_vertData" + 2);
 	var bytes14 = haxe_Unserializer.run(data14);
 	blobs4.push(kha_internal_BytesBlob.fromBytes(bytes14));
-	kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs4,["painter-text.frag.essl","painter-text-webgl2.frag.essl","painter-text-relaxed.frag.essl"]);
+	kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs4,["painter-video.vert.essl","painter-video-webgl2.vert.essl","painter-video-relaxed.vert.essl"]);
 	var blobs5 = [];
 	var data15 = Reflect.field(kha_Shaders,"painter_text_vertData" + 0);
 	var bytes15 = haxe_Unserializer.run(data15);
@@ -4807,27 +4871,27 @@ kha_Shaders.init = function() {
 	blobs5.push(kha_internal_BytesBlob.fromBytes(bytes17));
 	kha_Shaders.painter_text_vert = new kha_graphics4_VertexShader(blobs5,["painter-text.vert.essl","painter-text-webgl2.vert.essl","painter-text-relaxed.vert.essl"]);
 	var blobs6 = [];
-	var data18 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
+	var data18 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
 	var bytes18 = haxe_Unserializer.run(data18);
 	blobs6.push(kha_internal_BytesBlob.fromBytes(bytes18));
-	var data19 = Reflect.field(kha_Shaders,"painter_video_fragData" + 1);
+	var data19 = Reflect.field(kha_Shaders,"painter_text_fragData" + 1);
 	var bytes19 = haxe_Unserializer.run(data19);
 	blobs6.push(kha_internal_BytesBlob.fromBytes(bytes19));
-	var data20 = Reflect.field(kha_Shaders,"painter_video_fragData" + 2);
+	var data20 = Reflect.field(kha_Shaders,"painter_text_fragData" + 2);
 	var bytes20 = haxe_Unserializer.run(data20);
 	blobs6.push(kha_internal_BytesBlob.fromBytes(bytes20));
-	kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs6,["painter-video.frag.essl","painter-video-webgl2.frag.essl","painter-video-relaxed.frag.essl"]);
+	kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs6,["painter-text.frag.essl","painter-text-webgl2.frag.essl","painter-text-relaxed.frag.essl"]);
 	var blobs7 = [];
-	var data21 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
+	var data21 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
 	var bytes21 = haxe_Unserializer.run(data21);
 	blobs7.push(kha_internal_BytesBlob.fromBytes(bytes21));
-	var data22 = Reflect.field(kha_Shaders,"painter_video_vertData" + 1);
+	var data22 = Reflect.field(kha_Shaders,"painter_video_fragData" + 1);
 	var bytes22 = haxe_Unserializer.run(data22);
 	blobs7.push(kha_internal_BytesBlob.fromBytes(bytes22));
-	var data23 = Reflect.field(kha_Shaders,"painter_video_vertData" + 2);
+	var data23 = Reflect.field(kha_Shaders,"painter_video_fragData" + 2);
 	var bytes23 = haxe_Unserializer.run(data23);
 	blobs7.push(kha_internal_BytesBlob.fromBytes(bytes23));
-	kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs7,["painter-video.vert.essl","painter-video-webgl2.vert.essl","painter-video-relaxed.vert.essl"]);
+	kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs7,["painter-video.frag.essl","painter-video-webgl2.frag.essl","painter-video-relaxed.frag.essl"]);
 };
 var kha_Sound = function() {
 };
@@ -21743,7 +21807,7 @@ khm_Screen.samplesPerPixel = 1;
 khm_Screen.defaultScale = 1.0;
 khm_Screen.fps = new khm__$Screen_FPS();
 khm_Screen.isInited = false;
-game_data_Abilities.abils = [];
+game_data_Abilities.abilsData = [];
 game_data_Races.race = [];
 game_data_Towns.town = [];
 game_data_Towns.linara = 0;
@@ -21822,18 +21886,18 @@ kha_Shaders.painter_image_fragData2 = "s444:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRp
 kha_Shaders.painter_image_vertData0 = "s415:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgY29sb3I7CmF0dHJpYnV0ZSB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
 kha_Shaders.painter_image_vertData1 = "s380:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleFBvc2l0aW9uOwpvdXQgdmVjNCBjb2xvcjsKaW4gdmVjNCB2ZXJ0ZXhDb2xvcjsKCnZvaWQgbWFpbigpCnsKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbk1hdHJpeCAqIHZlYzQodmVydGV4UG9zaXRpb24sIDEuMCk7CiAgICB0ZXhDb29yZCA9IHRleFBvc2l0aW9uOwogICAgY29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
 kha_Shaders.painter_image_vertData2 = "s479:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzIgdGV4UG9zaXRpb247CnZhcnlpbmcgbWVkaXVtcCB2ZWM0IGNvbG9yOwphdHRyaWJ1dGUgbWVkaXVtcCB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
-kha_Shaders.painter_text_fragData0 = "s351:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKdmFyeWluZyBoaWdocCB2ZWM0IGZyYWdtZW50Q29sb3I7CnZhcnlpbmcgaGlnaHAgdmVjMiB0ZXhDb29yZDsKCnZvaWQgbWFpbigpCnsKICAgIGdsX0ZyYWdEYXRhWzBdID0gdmVjNChmcmFnbWVudENvbG9yLnh5eiwgdGV4dHVyZTJEKHRleCwgdGV4Q29vcmQpLnggKiBmcmFnbWVudENvbG9yLncpOwp9Cgo";
-kha_Shaders.painter_text_fragData1 = "s367:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKb3V0IGhpZ2hwIHZlYzQgRnJhZ0NvbG9yOwppbiBoaWdocCB2ZWM0IGZyYWdtZW50Q29sb3I7CmluIGhpZ2hwIHZlYzIgdGV4Q29vcmQ7Cgp2b2lkIG1haW4oKQp7CiAgICBGcmFnQ29sb3IgPSB2ZWM0KGZyYWdtZW50Q29sb3IueHl6LCB0ZXh0dXJlKHRleCwgdGV4Q29vcmQpLnggKiBmcmFnbWVudENvbG9yLncpOwp9Cgo";
-kha_Shaders.painter_text_fragData2 = "s340:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gbWVkaXVtcCBpbnQ7Cgp1bmlmb3JtIG1lZGl1bXAgc2FtcGxlcjJEIHRleDsKCnZhcnlpbmcgdmVjNCBmcmFnbWVudENvbG9yOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9GcmFnRGF0YVswXSA9IHZlYzQoZnJhZ21lbnRDb2xvci54eXosIHRleHR1cmUyRCh0ZXgsIHRleENvb3JkKS54ICogZnJhZ21lbnRDb2xvci53KTsKfQoK";
-kha_Shaders.painter_text_vertData0 = "s436:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgZnJhZ21lbnRDb2xvcjsKYXR0cmlidXRlIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgdGV4Q29vcmQgPSB0ZXhQb3NpdGlvbjsKICAgIGZyYWdtZW50Q29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
-kha_Shaders.painter_text_vertData1 = "s402:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleFBvc2l0aW9uOwpvdXQgdmVjNCBmcmFnbWVudENvbG9yOwppbiB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBmcmFnbWVudENvbG9yID0gdmVydGV4Q29sb3I7Cn0KCg";
-kha_Shaders.painter_text_vertData2 = "s500:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzIgdGV4UG9zaXRpb247CnZhcnlpbmcgbWVkaXVtcCB2ZWM0IGZyYWdtZW50Q29sb3I7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgdGV4Q29vcmQgPSB0ZXhQb3NpdGlvbjsKICAgIGZyYWdtZW50Q29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
-kha_Shaders.painter_video_fragData0 = "s471:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKdmFyeWluZyBoaWdocCB2ZWMyIHRleENvb3JkOwp2YXJ5aW5nIGhpZ2hwIHZlYzQgY29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBoaWdocCB2ZWM0IHRleGNvbG9yID0gdGV4dHVyZTJEKHRleCwgdGV4Q29vcmQpICogY29sb3I7CiAgICBoaWdocCB2ZWMzIF8zMiA9IHRleGNvbG9yLnh5eiAqIGNvbG9yLnc7CiAgICB0ZXhjb2xvciA9IHZlYzQoXzMyLngsIF8zMi55LCBfMzIueiwgdGV4Y29sb3Iudyk7CiAgICBnbF9GcmFnRGF0YVswXSA9IHRleGNvbG9yOwp9Cgo";
-kha_Shaders.painter_video_fragData1 = "s487:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKaW4gaGlnaHAgdmVjMiB0ZXhDb29yZDsKaW4gaGlnaHAgdmVjNCBjb2xvcjsKb3V0IGhpZ2hwIHZlYzQgRnJhZ0NvbG9yOwoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUodGV4LCB0ZXhDb29yZCkgKiBjb2xvcjsKICAgIGhpZ2hwIHZlYzMgXzMyID0gdGV4Y29sb3IueHl6ICogY29sb3IudzsKICAgIHRleGNvbG9yID0gdmVjNChfMzIueCwgXzMyLnksIF8zMi56LCB0ZXhjb2xvci53KTsKICAgIEZyYWdDb2xvciA9IHRleGNvbG9yOwp9Cgo";
-kha_Shaders.painter_video_fragData2 = "s444:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gbWVkaXVtcCBpbnQ7Cgp1bmlmb3JtIG1lZGl1bXAgc2FtcGxlcjJEIHRleDsKCnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKdmFyeWluZyB2ZWM0IGNvbG9yOwoKdm9pZCBtYWluKCkKewogICAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUyRCh0ZXgsIHRleENvb3JkKSAqIGNvbG9yOwogICAgdmVjMyBfMzIgPSB0ZXhjb2xvci54eXogKiBjb2xvci53OwogICAgdGV4Y29sb3IgPSB2ZWM0KF8zMi54LCBfMzIueSwgXzMyLnosIHRleGNvbG9yLncpOwogICAgZ2xfRnJhZ0RhdGFbMF0gPSB0ZXhjb2xvcjsKfQoK";
 kha_Shaders.painter_video_vertData0 = "s415:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgY29sb3I7CmF0dHJpYnV0ZSB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
 kha_Shaders.painter_video_vertData1 = "s380:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleFBvc2l0aW9uOwpvdXQgdmVjNCBjb2xvcjsKaW4gdmVjNCB2ZXJ0ZXhDb2xvcjsKCnZvaWQgbWFpbigpCnsKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbk1hdHJpeCAqIHZlYzQodmVydGV4UG9zaXRpb24sIDEuMCk7CiAgICB0ZXhDb29yZCA9IHRleFBvc2l0aW9uOwogICAgY29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
 kha_Shaders.painter_video_vertData2 = "s479:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzIgdGV4UG9zaXRpb247CnZhcnlpbmcgbWVkaXVtcCB2ZWM0IGNvbG9yOwphdHRyaWJ1dGUgbWVkaXVtcCB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBjb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
+kha_Shaders.painter_text_vertData0 = "s436:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgZnJhZ21lbnRDb2xvcjsKYXR0cmlidXRlIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgdGV4Q29vcmQgPSB0ZXhQb3NpdGlvbjsKICAgIGZyYWdtZW50Q29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
+kha_Shaders.painter_text_vertData1 = "s402:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmluIHZlYzMgdmVydGV4UG9zaXRpb247Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleFBvc2l0aW9uOwpvdXQgdmVjNCBmcmFnbWVudENvbG9yOwppbiB2ZWM0IHZlcnRleENvbG9yOwoKdm9pZCBtYWluKCkKewogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogdmVjNCh2ZXJ0ZXhQb3NpdGlvbiwgMS4wKTsKICAgIHRleENvb3JkID0gdGV4UG9zaXRpb247CiAgICBmcmFnbWVudENvbG9yID0gdmVydGV4Q29sb3I7Cn0KCg";
+kha_Shaders.painter_text_vertData2 = "s500:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1lZGl1bXAgbWF0NCBwcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIG1lZGl1bXAgdmVjMyB2ZXJ0ZXhQb3NpdGlvbjsKdmFyeWluZyBtZWRpdW1wIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzIgdGV4UG9zaXRpb247CnZhcnlpbmcgbWVkaXVtcCB2ZWM0IGZyYWdtZW50Q29sb3I7CmF0dHJpYnV0ZSBtZWRpdW1wIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgdGV4Q29vcmQgPSB0ZXhQb3NpdGlvbjsKICAgIGZyYWdtZW50Q29sb3IgPSB2ZXJ0ZXhDb2xvcjsKfQoK";
+kha_Shaders.painter_text_fragData0 = "s351:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKdmFyeWluZyBoaWdocCB2ZWM0IGZyYWdtZW50Q29sb3I7CnZhcnlpbmcgaGlnaHAgdmVjMiB0ZXhDb29yZDsKCnZvaWQgbWFpbigpCnsKICAgIGdsX0ZyYWdEYXRhWzBdID0gdmVjNChmcmFnbWVudENvbG9yLnh5eiwgdGV4dHVyZTJEKHRleCwgdGV4Q29vcmQpLnggKiBmcmFnbWVudENvbG9yLncpOwp9Cgo";
+kha_Shaders.painter_text_fragData1 = "s367:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKb3V0IGhpZ2hwIHZlYzQgRnJhZ0NvbG9yOwppbiBoaWdocCB2ZWM0IGZyYWdtZW50Q29sb3I7CmluIGhpZ2hwIHZlYzIgdGV4Q29vcmQ7Cgp2b2lkIG1haW4oKQp7CiAgICBGcmFnQ29sb3IgPSB2ZWM0KGZyYWdtZW50Q29sb3IueHl6LCB0ZXh0dXJlKHRleCwgdGV4Q29vcmQpLnggKiBmcmFnbWVudENvbG9yLncpOwp9Cgo";
+kha_Shaders.painter_text_fragData2 = "s340:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gbWVkaXVtcCBpbnQ7Cgp1bmlmb3JtIG1lZGl1bXAgc2FtcGxlcjJEIHRleDsKCnZhcnlpbmcgdmVjNCBmcmFnbWVudENvbG9yOwp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9GcmFnRGF0YVswXSA9IHZlYzQoZnJhZ21lbnRDb2xvci54eXosIHRleHR1cmUyRCh0ZXgsIHRleENvb3JkKS54ICogZnJhZ21lbnRDb2xvci53KTsKfQoK";
+kha_Shaders.painter_video_fragData0 = "s471:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKdmFyeWluZyBoaWdocCB2ZWMyIHRleENvb3JkOwp2YXJ5aW5nIGhpZ2hwIHZlYzQgY29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBoaWdocCB2ZWM0IHRleGNvbG9yID0gdGV4dHVyZTJEKHRleCwgdGV4Q29vcmQpICogY29sb3I7CiAgICBoaWdocCB2ZWMzIF8zMiA9IHRleGNvbG9yLnh5eiAqIGNvbG9yLnc7CiAgICB0ZXhjb2xvciA9IHZlYzQoXzMyLngsIF8zMi55LCBfMzIueiwgdGV4Y29sb3Iudyk7CiAgICBnbF9GcmFnRGF0YVswXSA9IHRleGNvbG9yOwp9Cgo";
+kha_Shaders.painter_video_fragData1 = "s487:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKaW4gaGlnaHAgdmVjMiB0ZXhDb29yZDsKaW4gaGlnaHAgdmVjNCBjb2xvcjsKb3V0IGhpZ2hwIHZlYzQgRnJhZ0NvbG9yOwoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUodGV4LCB0ZXhDb29yZCkgKiBjb2xvcjsKICAgIGhpZ2hwIHZlYzMgXzMyID0gdGV4Y29sb3IueHl6ICogY29sb3IudzsKICAgIHRleGNvbG9yID0gdmVjNChfMzIueCwgXzMyLnksIF8zMi56LCB0ZXhjb2xvci53KTsKICAgIEZyYWdDb2xvciA9IHRleGNvbG9yOwp9Cgo";
+kha_Shaders.painter_video_fragData2 = "s444:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gbWVkaXVtcCBpbnQ7Cgp1bmlmb3JtIG1lZGl1bXAgc2FtcGxlcjJEIHRleDsKCnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKdmFyeWluZyB2ZWM0IGNvbG9yOwoKdm9pZCBtYWluKCkKewogICAgdmVjNCB0ZXhjb2xvciA9IHRleHR1cmUyRCh0ZXgsIHRleENvb3JkKSAqIGNvbG9yOwogICAgdmVjMyBfMzIgPSB0ZXhjb2xvci54eXogKiBjb2xvci53OwogICAgdGV4Y29sb3IgPSB2ZWM0KF8zMi54LCBfMzIueSwgXzMyLnosIHRleGNvbG9yLncpOwogICAgZ2xfRnJhZ0RhdGFbMF0gPSB0ZXhjb2xvcjsKfQoK";
 kha_System.renderListeners = [];
 kha_System.foregroundListeners = [];
 kha_System.resumeListeners = [];
