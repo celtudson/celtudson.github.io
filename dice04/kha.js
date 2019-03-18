@@ -173,11 +173,10 @@ Loader.prototype = $extend(unit_Screen.prototype,{
 	,onInit: function() {
 		this.setScale(2);
 		kha_Assets.loadEverything(function() {
-			var r0 = new game_data_Races();
-			var t0 = new game_data_Towns();
-			var a0 = new game_data_Abilities();
-			var game1 = new game_Game();
-			game1.myInit();
+			new game_data_Races();
+			new game_data_Towns();
+			new game_data_Abilities();
+			new game_Game().myInit();
 		});
 	}
 	,onRender: function(frame) {
@@ -214,7 +213,7 @@ var Main = function() { };
 $hxClasses["Main"] = Main;
 Main.__name__ = true;
 Main.main = function() {
-	kha_System.start(new kha_SystemOptions("...",800,480,null,null),function(_) {
+	kha_System.start(new kha_SystemOptions("DestinyDice",800,480,null,null),function(_) {
 		window.document.documentElement.style.padding = "0";
 		window.document.documentElement.style.margin = "0";
 		window.document.body.style.padding = "0";
@@ -222,8 +221,7 @@ Main.main = function() {
 		var canvas = window.document.getElementById(kha_CompilerDefines.canvas_id);
 		canvas.width = 800;
 		canvas.height = 480;
-		var loader = new Loader();
-		loader.show();
+		new Loader().show();
 	});
 };
 Math.__name__ = true;
@@ -331,6 +329,99 @@ _$UInt_UInt_$Impl_$.toFloat = function(this1) {
 	} else {
 		return int + 0.0;
 	}
+};
+var Widgets = function() { };
+$hxClasses["Widgets"] = Widgets;
+Widgets.__name__ = true;
+Widgets.rect = function(ui,x,y,w,h) {
+	var g = ui.g;
+	var id = ++ui.id;
+	var this1 = [id,x,y,w,h,0];
+	var rect = this1;
+	ui.addWidget(rect);
+	ui.checkWidgetState(rect);
+	return ui.isWidgetClicked(id);
+};
+Widgets.button = function(ui,x,y,text) {
+	if(text == null) {
+		text = "";
+	}
+	var g = ui.g;
+	var id = ++ui.id;
+	var w = Widgets.buttonW;
+	var h = Widgets.buttonH;
+	var this1 = [id,x,y,w,h,0];
+	var rect = this1;
+	ui.addWidget(rect);
+	ui.checkWidgetState(rect);
+	if(ui.focusId == id) {
+		g.set_color(Widgets.focusColor);
+		var s = 2;
+		g.drawRect(rect[1] - s / 2,rect[2] - s / 2,rect[3] + s,rect[4] + s,s);
+	}
+	var state = ui.isActive(id) ? khm_imgui_WidgetState.Active : ui.focusId == id ? khm_imgui_WidgetState.Focus : ui.isHovered(id) ? khm_imgui_WidgetState.Hover : khm_imgui_WidgetState.Idle;
+	var tmp;
+	switch(state._hx_index) {
+	case 0:
+		tmp = Widgets.bgColor;
+		break;
+	case 1:case 2:
+		tmp = Widgets.hoverColor;
+		break;
+	case 3:
+		tmp = Widgets.activeColor;
+		break;
+	}
+	g.set_color(tmp);
+	g.fillRect(x,y,w,h);
+	if(ui.isActive(id)) {
+		g.set_color(Widgets.bgColor);
+	} else {
+		g.set_color(Widgets.activeColor);
+	}
+	var textW = g.get_font().width(g.get_fontSize(),text);
+	var textH = g.get_font().height(g.get_fontSize());
+	g.drawString(text,x + w / 2 - textW / 2,y + h / 2 - textH / 2);
+	return ui.isWidgetClicked(id);
+};
+Widgets.imageButton = function(ui,x,y,img,n,color) {
+	if(color == null) {
+		color = -1;
+	}
+	var g = ui.g;
+	var id = ++ui.id;
+	var w = Widgets.buttonW;
+	var h = Widgets.buttonH;
+	var this1 = [id,x,y,w,h,0];
+	var rect = this1;
+	ui.addWidget(rect);
+	ui.checkWidgetState(rect);
+	if(ui.focusId == id) {
+		g.set_color(Widgets.focusColor);
+		var s = 2;
+		g.drawRect(rect[1] - s / 2,rect[2] - s / 2,rect[3] + s,rect[4] + s,s);
+	}
+	var state = ui.isActive(id) ? khm_imgui_WidgetState.Active : ui.focusId == id ? khm_imgui_WidgetState.Focus : ui.isHovered(id) ? khm_imgui_WidgetState.Hover : khm_imgui_WidgetState.Idle;
+	var tmp;
+	switch(state._hx_index) {
+	case 0:
+		tmp = Widgets.bgColor;
+		break;
+	case 1:case 2:
+		tmp = Widgets.hoverColor;
+		break;
+	case 3:
+		tmp = Widgets.activeColor;
+		break;
+	}
+	g.set_color(tmp);
+	g.fillRect(x,y,w,h);
+	g.set_color(color);
+	var imgW = img.get_width() > w ? w : img.get_width();
+	var imgH = img.get_height() > h ? h : img.get_height();
+	g.drawScaledSubImage(img,Widgets.buttonW * n,0,w,h,x + w / 2 - imgW / 2,y + h / 2 - imgH / 2,imgW,imgH);
+	g.set_color(-1);
+	return ui.isWidgetClicked(id);
 };
 var khm__$Screen_FPS = function() {
 	this.lastTime = 0.0;
@@ -591,7 +682,6 @@ khm_Screen.prototype = {
 };
 var game_Game = function() {
 	this.fontGlyphs = [];
-	this.battle = new game_battle_Battle();
 	khm_Screen.call(this);
 };
 $hxClasses["game.Game"] = game_Game;
@@ -601,6 +691,7 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 	hero: null
 	,battle: null
 	,fontGlyphs: null
+	,ui: null
 	,myInit: function() {
 		var _g = 32;
 		while(_g < 256) {
@@ -612,6 +703,8 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 			var i1 = _g1++;
 			this.fontGlyphs.push(i1);
 		}
+		this.ui = new khm_imgui_Imgui(new khm_imgui_ImguiSets(false,null,null));
+		this.battle = new game_battle_Battle(this.ui);
 		this.show();
 		this.setScale(2);
 		this.battle.gameScale = this.scale;
@@ -623,13 +716,21 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		}
 	}
 	,onMouseDown: function(p) {
-		this.battle.onMouseDown(p);
+		if(this.ui.onPointerDown(p)) {
+			return;
+		}
+	}
+	,onMouseUp: function(p) {
+		if(this.ui.onPointerUp(p)) {
+			return;
+		}
+	}
+	,onMouseMove: function(p) {
+		if(this.ui.onPointerMove(p)) {
+			return;
+		}
 	}
 	,onUpdate: function() {
-		game_Game.screenW = khm_Screen.w;
-		game_Game.screenH = khm_Screen.h;
-		game_Game.mouseX = this.pointers.h[0].x;
-		game_Game.mouseY = this.pointers.h[0].y;
 		if(this.keys.h[32]) {
 			this.battle.nextTurn();
 		}
@@ -641,33 +742,52 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		g.set_font(kha_Assets.fonts.OpenSans_Regular);
 		kha_graphics2_Graphics.fontGlyphs = this.fontGlyphs;
 		g.set_fontSize(18);
+		this.ui.begin(g);
+		if(Widgets.rect(this.ui,130,166,60,74)) {
+			this.battle.nextTurn();
+		}
 		this.battle.render(g);
+		if(Widgets.button(this.ui,6,6,"Restart")) {
+			this.createGame();
+		}
+		this.ui.end();
 		g.end();
 	}
 	,createGame: function() {
-		var hp = 25 + Std.random(11);
-		this.hero = { race : game_data_Races.rndRace(), abils : [0,1,3], hp : hp, maxHp : hp, atk : 8 + Std.random(5)};
-		var hp1 = 25 + Std.random(11);
-		this.battle.startBattle(false,this.hero,{ race : game_data_Races.rndRace(), abils : [], hp : hp1, maxHp : hp1, atk : 8 + Std.random(5)});
+		this.hero = { race : game_data_Races.rndRace(), abils : [0,1,3], hp : 50, maxHp : 50, atk : 4};
+		this.battle.startBattle(false,this.hero,{ race : game_data_Races.rndRace(), abils : [], hp : 50, maxHp : 50, atk : 6});
 	}
 	,__class__: game_Game
 });
-var game_battle_Abils = function(b) {
+var game_battle_Abils = function(b,imgui) {
+	this.availEnemyAbils = [];
+	this.availHeroAbils = [];
 	this.battle = b;
+	this.ui = imgui;
 	this.imgAbils = kha_Assets.images.abils;
+	var ui = this.ui;
+	Widgets.buttonW = 32;
+	Widgets.buttonH = 32;
 };
 $hxClasses["game.battle.Abils"] = game_battle_Abils;
 game_battle_Abils.__name__ = true;
 game_battle_Abils.prototype = {
 	battle: null
+	,nextTurn: null
 	,hero: null
 	,enemy: null
+	,availHeroAbils: null
+	,availEnemyAbils: null
+	,ui: null
+	,x: null
+	,y: null
 	,imgAbils: null
 	,setBeings: function(battleHero,battleEnemy) {
 		this.hero = battleHero;
 		this.enemy = battleEnemy;
 	}
 	,itsYourTurn: function(nextTurn) {
+		this.nextTurn = nextTurn;
 		this.hero.multi = 1;
 		this.enemy.multi = 1;
 		if(nextTurn == false) {
@@ -680,17 +800,33 @@ game_battle_Abils.prototype = {
 				if(abil.cool > 0) {
 					abil.cool--;
 				}
+				this.availEnemyAbils[abil.id] = abil.phase == 1 ? false : true;
+			}
+			var _g2 = 0;
+			var _g3 = this.hero.abils;
+			while(_g2 < _g3.length) {
+				var abil1 = _g3[_g2];
+				++_g2;
+				this.availHeroAbils[abil1.id] = abil1.phase == 0 ? false : true;
 			}
 		} else {
 			this.hero.ap = 10;
-			var _g2 = 0;
+			var _g4 = 0;
 			var _g11 = this.hero.abils;
-			while(_g2 < _g11.length) {
-				var abil1 = _g11[_g2];
-				++_g2;
-				if(abil1.cool > 0) {
-					abil1.cool--;
+			while(_g4 < _g11.length) {
+				var abil2 = _g11[_g4];
+				++_g4;
+				if(abil2.cool > 0) {
+					abil2.cool--;
 				}
+				this.availHeroAbils[abil2.id] = abil2.phase == 1 ? false : true;
+			}
+			var _g21 = 0;
+			var _g31 = this.enemy.abils;
+			while(_g21 < _g31.length) {
+				var abil3 = _g31[_g21];
+				++_g21;
+				this.availEnemyAbils[abil3.id] = abil3.phase == 0 ? false : true;
 			}
 		}
 	}
@@ -709,21 +845,33 @@ game_battle_Abils.prototype = {
 			abil.coolValue = abil.coolValue * abil.coolRise | 0;
 		}
 	}
-	,pressOnAbility: function(whoExecute,nextTurn,abil) {
-		if(whoExecute != false) {
-			switch(abil.phase) {
-			case 0:
-				if(nextTurn == false) {
-					return;
+	,render: function(g,allowRoll) {
+		g.drawString("" + Std.string(this.nextTurn),4,4);
+		var _g = 0;
+		var _g1 = this.hero.abils.length;
+		while(_g < _g1) {
+			var i = _g++;
+			var abil = this.hero.abils[i];
+			var dx = this.x + abil.drawX | 0;
+			var dy = this.y + abil.drawY + 6 | 0;
+			var available = this.availHeroAbils[abil.id];
+			var color = -1;
+			if(available == false || abil.cool > 0) {
+				color = 1694498815;
+			} else if(abil.selected) {
+				color = -16711681;
+			}
+			if(Widgets.imageButton(this.ui,dx,dy,this.imgAbils,abil.id,color)) {
+				if(allowRoll && available) {
+					this.pressOnAbility(true,this.nextTurn,abil);
 				}
-				break;
-			case 1:
-				if(nextTurn == true) {
-					return;
-				}
-				break;
+			}
+			if(abil.cool > 0) {
+				g.drawString("" + abil.cool,dx,dy);
 			}
 		}
+	}
+	,pressOnAbility: function(whoExecute,nextTurn,abil) {
 		var who = whoExecute ? this.hero : this.enemy;
 		if(abil.selected == false) {
 			if(abil.cool > 0 || who.ap < abil.needAp) {
@@ -748,7 +896,7 @@ game_battle_Abils.prototype = {
 				who.hp = who.lastHp;
 				who.lastHp = d01;
 				this.battle.updateHealth();
-				haxe_Log.trace("Refusal",{ fileName : "game/battle/Abils.hx", lineNumber : 88, className : "game.battle.Abils", methodName : "pressOnAbility"});
+				haxe_Log.trace("Refusal",{ fileName : "game/battle/Abils.hx", lineNumber : 117, className : "game.battle.Abils", methodName : "pressOnAbility"});
 			} else {
 				abil.selected = false;
 				return;
@@ -773,49 +921,26 @@ game_battle_Abils.prototype = {
 				return;
 			}
 			who.multi = 0;
-			haxe_Log.trace("ShadowStep",{ fileName : "game/battle/Abils.hx", lineNumber : 114, className : "game.battle.Abils", methodName : "pressOnAbility"});
+			haxe_Log.trace("ShadowStep",{ fileName : "game/battle/Abils.hx", lineNumber : 143, className : "game.battle.Abils", methodName : "pressOnAbility"});
 			break;
 		}
 		who.ap -= abil.needAp;
 	}
-	,render: function(g,x,y,gameScale) {
-		var _g = 0;
-		var _g1 = this.hero.abils.length;
-		while(_g < _g1) {
-			var i = _g++;
-			var abil = this.hero.abils[i];
-			var dx = x + abil.drawX;
-			var dy = y + abil.drawY + 6;
-			if(abil.cool > 0 || abil.selected) {
-				g.set_color(1728053247);
-			} else {
-				g.set_color(-1);
-			}
-			g.drawSubImage(this.imgAbils,dx,dy,16 * abil.id,0,16,16);
-			if(abil.cool > 0) {
-				g.set_color(-16777216);
-				g.drawString("" + abil.cool,dx,dy);
-			}
-		}
-	}
 	,__class__: game_battle_Abils
 };
-var game_battle_Battle = function() {
-	this.enemyHpXFade = 0;
-	this.heroHpXFade = 0;
-	this.enemyHpX = 0;
-	this.heroHpX = 0;
+var game_battle_Battle = function(imgui) {
 	this.enemyHp = 0;
 	this.heroHp = 0;
 	this.battleLogColor = [];
 	this.battleLog = [];
-	this.scale = 2;
 	this.y = 158;
 	this.x = 16;
 	this.dice = new game_battle_Dice(this);
-	this.abils = new game_battle_Abils(this);
-	this.scaledX = this.x / this.scale + 2;
-	this.scaledY = this.y / this.scale;
+	this.dice.x = this.x + 116;
+	this.dice.y = this.y + 8;
+	this.abils = new game_battle_Abils(this,imgui);
+	this.abils.x = this.x + 4;
+	this.abils.y = this.y + 6;
 	this.imgHBar = kha_Assets.images.health;
 	this.imgHBarBG = kha_Assets.images.health_bg;
 };
@@ -830,9 +955,6 @@ game_battle_Battle.prototype = {
 	,gameScale: null
 	,x: null
 	,y: null
-	,scale: null
-	,scaledX: null
-	,scaledY: null
 	,battleLog: null
 	,battleLogColor: null
 	,imgHBar: null
@@ -849,36 +971,13 @@ game_battle_Battle.prototype = {
 		this.abils.setBeings(this.hero,this.enemy);
 		this.battleLog.length = 0;
 		this.battleLogColor.length = 0;
-		this.heroHpX = 1;
-		this.enemyHpX = 1;
-		this.heroHpXFade = 1;
-		this.enemyHpXFade = 1;
+		this.heroHpX = 0;
+		this.enemyHpX = 0;
+		this.heroHpXFade = 0;
+		this.enemyHpXFade = 0;
 		this.addBattleLog((heroFirst ? "Вы напали на " : "На Вас напал ") + game_data_Races.getName(beingEnemy.race));
 		this.dice.reset(heroFirst);
 		this.nextTurn();
-	}
-	,onMouseDown: function(p) {
-		if(this.dice.allowRoll == false) {
-			return;
-		}
-		if(p.y < this.y) {
-			return;
-		}
-		var mouseX = p.x - this.x - 4;
-		var slotId = -1;
-		if(mouseX >= 110 && mouseX < 170) {
-			this.nextTurn();
-		} else if(mouseX < 100) {
-			slotId = mouseX / 34 | 0;
-			if(this.hero.abils[slotId] == null) {
-				slotId = -1;
-			}
-		}
-		if(slotId == -1) {
-			return;
-		}
-		var abil = this.hero.abils[slotId];
-		this.abils.pressOnAbility(true,this.dice.nextTurn,abil);
 	}
 	,nextTurn: function() {
 		var d0 = this.dice.tryRoll();
@@ -974,14 +1073,14 @@ game_battle_Battle.prototype = {
 				this.enemyHp = this.enemy.hp;
 				this.enemyHpXFade = this.enemyHpX;
 			}
-			this.enemyHpX = 72 - 72 / this.enemy.maxHp * this.enemy.hp + 1;
+			this.enemyHpX = 138 - 138 / this.enemy.maxHp * this.enemy.hp;
 		} else {
 			this.enemy.lastHp = this.enemy.hp;
 			if(this.heroHp != this.hero.hp) {
 				this.heroHp = this.hero.hp;
 				this.heroHpXFade = this.heroHpX;
 			}
-			this.heroHpX = 72 - 72 / this.hero.maxHp * this.hero.hp + 1;
+			this.heroHpX = 138 - 138 / this.hero.maxHp * this.hero.hp;
 		}
 	}
 	,update: function() {
@@ -999,7 +1098,6 @@ game_battle_Battle.prototype = {
 		g.set_color(-13418933);
 		g.fillRect(this.x,this.y - 200,288,200);
 		g.set_color(-12156236);
-		g.fillRect(this.x,this.y + 8,114,74);
 		var l = this.battleLog.length;
 		var _g = 0;
 		var _g1 = l;
@@ -1019,28 +1117,16 @@ game_battle_Battle.prototype = {
 			g.drawString(this.battleLog[i],this.x + 4,this.y - 5 - l * 14 + i * 14);
 		}
 		g.set_color(-1);
-		this.dice.render(g,this.x + 116,this.y + 8,this.gameScale);
-		var transformation = new kha_math_FastMatrix3(this.scale * this.gameScale,0,0,0,this.scale * this.gameScale,0,0,0,1);
-		g.setTransformation(transformation);
-		var _this = g.transformations[g.transformations.length - 1];
-		_this._00 = transformation._00;
-		_this._10 = transformation._10;
-		_this._20 = transformation._20;
-		_this._01 = transformation._01;
-		_this._11 = transformation._11;
-		_this._21 = transformation._21;
-		_this._02 = transformation._02;
-		_this._12 = transformation._12;
-		_this._22 = transformation._22;
-		this.abils.render(g,this.scaledX,this.scaledY,this.gameScale);
+		this.dice.render(g);
+		this.abils.render(g,this.dice.allowRoll);
 		g.set_color(-1);
-		g.drawString("" + this.hero.hp,this.scaledX,this.scaledY + 16);
-		g.drawString("" + this.hero.lastHp,this.scaledX,this.scaledY + 26);
-		g.drawString("" + this.hero.ap,this.scaledX + 53,this.scaledY + 8);
-		g.drawString("" + this.enemy.ap,this.scaledX + 71,this.scaledY + 8);
-		g.drawString("" + Std.string(this.dice.nextTurn),132,78);
-		g.drawString("" + this.hero.multi,this.scaledX + 53,this.scaledY + 19);
-		g.drawString("" + this.enemy.multi,this.scaledX + 71,this.scaledY + 19);
+		g.drawString("" + this.hero.hp,this.x,this.y + 43);
+		g.drawString("" + this.hero.lastHp,this.x,this.y + 55);
+		g.drawString("" + this.hero.ap,this.x + 114,this.y + 30);
+		g.drawString("" + this.enemy.ap,this.x + 158,this.y + 30);
+		g.drawString("" + this.hero.multi,this.x + 114,this.y + 43);
+		g.drawString("" + this.enemy.multi,this.x + 158,this.y + 43);
+		g.drawString("" + Std.string(this.dice.nextTurn),this.x + 100,this.y + 50);
 		this.drawHealth(g);
 	}
 	,addBattleLog: function(line,color) {
@@ -1095,24 +1181,25 @@ game_battle_Battle.prototype = {
 		}
 	}
 	,drawHealth: function(g) {
-		var scissorScale = this.scale * this.gameScale | 0;
-		var scissorW = 70 * scissorScale;
-		var scissorH = 4 * scissorScale;
-		g.scissor(this.scaledX * scissorScale | 0,this.scaledY * scissorScale | 0,scissorW,scissorH);
-		g.fillRect(-1000,-1000,2000,2000);
-		g.drawImage(this.imgHBarBG,this.scaledX,this.scaledY);
+		var scisX = this.x * this.gameScale | 0;
+		var scisY = this.y * this.gameScale | 0;
+		var scisW = 138 * this.gameScale | 0;
+		var scisH = 8 * this.gameScale | 0;
+		var scisX2 = scisW + 28 * this.gameScale | 0;
+		var x2 = this.x + 276 + 12;
+		g.scissor(scisX,scisY,scisW,scisH);
+		g.drawImage(this.imgHBarBG,this.x,this.y);
 		g.set_color(-65536);
-		g.drawImage(this.imgHBar,this.scaledX + this.heroHpXFade,this.scaledY + 1);
+		g.drawImage(this.imgHBar,this.x + this.heroHpXFade,this.y);
 		g.set_color(-1);
-		g.drawImage(this.imgHBar,this.scaledX + this.heroHpX,this.scaledY + 1);
+		g.drawImage(this.imgHBar,this.x + this.heroHpX,this.y);
 		g.disableScissor();
-		g.scissor((this.scaledX + 70) * scissorScale | 0,this.scaledY * scissorScale | 0,scissorW,scissorH);
-		g.fillRect(-1000,-1000,2000,2000);
-		g.drawScaledImage(this.imgHBarBG,this.scaledX + 140,this.scaledY,-this.imgHBarBG.get_width(),this.imgHBarBG.get_height());
+		g.scissor(scisX2,scisY,scisW,scisH);
+		g.drawScaledImage(this.imgHBarBG,x2,this.y,-this.imgHBarBG.get_width(),this.imgHBarBG.get_height());
 		g.set_color(-65536);
-		g.drawScaledImage(this.imgHBar,this.scaledX + 140 - this.enemyHpXFade,this.scaledY + 1,-this.imgHBar.get_width(),this.imgHBar.get_height());
+		g.drawScaledImage(this.imgHBar,x2 - this.enemyHpXFade,this.y,-this.imgHBar.get_width(),this.imgHBar.get_height());
 		g.set_color(-1);
-		g.drawScaledImage(this.imgHBar,this.scaledX + 140 - this.enemyHpX,this.scaledY + 1,-this.imgHBar.get_width(),this.imgHBar.get_height());
+		g.drawScaledImage(this.imgHBar,x2 - this.enemyHpX,this.y,-this.imgHBar.get_width(),this.imgHBar.get_height());
 		g.disableScissor();
 	}
 	,__class__: game_battle_Battle
@@ -1141,6 +1228,8 @@ game_battle_Dice.prototype = {
 	,needUpdate: null
 	,being1_dice: null
 	,being2_dice: null
+	,x: null
+	,y: null
 	,imgDagger: null
 	,daggerAngle: null
 	,newDaggerAngle: null
@@ -1257,47 +1346,32 @@ game_battle_Dice.prototype = {
 		var d0 = cur / max;
 		return this.lastDaggerAngle + (this.daggerAngle - this.lastDaggerAngle) * d0;
 	}
-	,render: function(g,x,y,gameScale) {
-		var scale = 2;
-		var transformation = new kha_math_FastMatrix3(scale * gameScale,0,0,0,scale * gameScale,0,0,0,1);
-		g.setTransformation(transformation);
-		var _this = g.transformations[g.transformations.length - 1];
-		_this._00 = transformation._00;
-		_this._10 = transformation._10;
-		_this._20 = transformation._20;
-		_this._01 = transformation._01;
-		_this._11 = transformation._11;
-		_this._21 = transformation._21;
-		_this._02 = transformation._02;
-		_this._12 = transformation._12;
-		_this._22 = transformation._22;
-		var scaledX = x / scale;
-		var scaledY = y / scale;
-		var dice1_x = scaledX;
-		var dice2_x = dice1_x + 17;
-		var dices1_y = scaledY;
-		var dices2_y = dices1_y + 26;
+	,render: function(g) {
+		var dice1_x = this.x;
+		var dice2_x = dice1_x + 34;
+		var dices1_y = this.y;
+		var dices2_y = dices1_y + 52;
 		if(this.draw1_dice > 0) {
-			g.drawSubImage(this.imgDice,dice1_x,dices2_y,11 * (this.draw1_dice - 1),0,11,11);
-			g.drawSubImage(this.imgDice,dice2_x,dices2_y,11 * (this.draw1_dice2 - 1),0,11,11);
+			g.drawSubImage(this.imgDice,dice1_x,dices2_y,22 * (this.draw1_dice - 1),0,22,22);
+			g.drawSubImage(this.imgDice,dice2_x,dices2_y,22 * (this.draw1_dice2 - 1),0,22,22);
 		}
 		if(this.draw2_dice > 0) {
-			g.drawSubImage(this.imgDice,dice1_x,dices1_y,11 * (this.draw2_dice - 1),0,11,11);
-			g.drawSubImage(this.imgDice,dice2_x,dices1_y,11 * (this.draw2_dice2 - 1),0,11,11);
+			g.drawSubImage(this.imgDice,dice1_x,dices1_y,22 * (this.draw2_dice - 1),0,22,22);
+			g.drawSubImage(this.imgDice,dice2_x,dices1_y,22 * (this.draw2_dice2 - 1),0,22,22);
 		}
 		var angle = this.getEaseAngle();
-		var _this1 = g.transformations[g.transformations.length - 1];
+		var _this = g.transformations[g.transformations.length - 1];
 		var m__00 = Math.cos(angle);
 		var m__10 = Math.sin(angle);
-		var m__20 = scaledX + 14;
+		var m__20 = this.x + 28;
 		var m__01 = -Math.sin(angle);
 		var m__11 = Math.cos(angle);
-		var m__21 = scaledY + 18.5;
+		var m__21 = this.y + 37;
 		var m__02 = 0;
 		var m__12 = 0;
 		var m__22 = 1;
-		g.pushTransformation(new kha_math_FastMatrix3(_this1._00 * m__00 + _this1._10 * m__01 + _this1._20 * m__02,_this1._00 * m__10 + _this1._10 * m__11 + _this1._20 * m__12,_this1._00 * m__20 + _this1._10 * m__21 + _this1._20 * m__22,_this1._01 * m__00 + _this1._11 * m__01 + _this1._21 * m__02,_this1._01 * m__10 + _this1._11 * m__11 + _this1._21 * m__12,_this1._01 * m__20 + _this1._11 * m__21 + _this1._21 * m__22,_this1._02 * m__00 + _this1._12 * m__01 + _this1._22 * m__02,_this1._02 * m__10 + _this1._12 * m__11 + _this1._22 * m__12,_this1._02 * m__20 + _this1._12 * m__21 + _this1._22 * m__22));
-		g.drawImage(this.imgDagger,-6,-9);
+		g.pushTransformation(new kha_math_FastMatrix3(_this._00 * m__00 + _this._10 * m__01 + _this._20 * m__02,_this._00 * m__10 + _this._10 * m__11 + _this._20 * m__12,_this._00 * m__20 + _this._10 * m__21 + _this._20 * m__22,_this._01 * m__00 + _this._11 * m__01 + _this._21 * m__02,_this._01 * m__10 + _this._11 * m__11 + _this._21 * m__12,_this._01 * m__20 + _this._11 * m__21 + _this._21 * m__22,_this._02 * m__00 + _this._12 * m__01 + _this._22 * m__02,_this._02 * m__10 + _this._12 * m__11 + _this._22 * m__12,_this._02 * m__20 + _this._12 * m__21 + _this._22 * m__22));
+		g.drawImage(this.imgDagger,-12,-18);
 		g.popTransformation();
 	}
 	,__class__: game_battle_Dice
@@ -1306,7 +1380,7 @@ var game_data_Abilities = function() {
 	game_data_Abilities.abilsData[0] = { name : "Отказ", phase : 0, needAp : 6, initCool : 4, coolValue : 5, coolRise : 1.2};
 	game_data_Abilities.abilsData[1] = { name : "Берсерк", phase : 2, needAp : 3, initCool : 6, coolValue : 4};
 	game_data_Abilities.abilsData[2] = { name : "Исход", phase : 0, needAp : 10, initCool : 4, coolValue : 0};
-	game_data_Abilities.abilsData[3] = { name : "Шаг во тьму", phase : 1, needAp : 10, initCool : 1, coolValue : 6, coolRise : 1.5};
+	game_data_Abilities.abilsData[3] = { name : "Шаг во тьму", phase : 1, needAp : 10, coolValue : 6, coolRise : 1.5};
 };
 $hxClasses["game.data.Abilities"] = game_data_Abilities;
 game_data_Abilities.__name__ = true;
@@ -1321,7 +1395,7 @@ game_data_Abilities.get = function(needAbils) {
 		if(abil > game_data_Abilities.abilsData.length - 1) {
 			continue;
 		}
-		d0.push({ id : abil, name : game_data_Abilities.abilsData[abil].name, selected : false, drawX : dx * 17, drawY : dy * 17, phase : game_data_Abilities.abilsData[abil].phase, needAp : game_data_Abilities.abilsData[abil].needAp, cool : game_data_Abilities.abilsData[abil].initCool, coolValue : game_data_Abilities.abilsData[abil].coolValue, coolRise : game_data_Abilities.abilsData[abil].coolRise == null ? 1 : game_data_Abilities.abilsData[abil].coolRise});
+		d0.push({ id : abil, name : game_data_Abilities.abilsData[abil].name, selected : false, drawX : dx * 34, drawY : dy * 34, phase : game_data_Abilities.abilsData[abil].phase, needAp : game_data_Abilities.abilsData[abil].needAp, cool : game_data_Abilities.abilsData[abil].initCool == null ? 1 : game_data_Abilities.abilsData[abil].initCool, coolValue : game_data_Abilities.abilsData[abil].coolValue, coolRise : game_data_Abilities.abilsData[abil].coolRise == null ? 1 : game_data_Abilities.abilsData[abil].coolRise});
 		++dx;
 		if(dx > 2) {
 			dx = 0;
@@ -2478,19 +2552,19 @@ var kha__$Assets_ImageList = function() {
 	this.mapDescription = { name : "map", original_height : 280, original_width : 280, files : ["map.png"], type : "image"};
 	this.mapName = "map";
 	this.map = null;
-	this.health_bgDescription = { name : "health_bg", original_height : 4, original_width : 70, files : ["health_bg.png"], type : "image"};
+	this.health_bgDescription = { name : "health_bg", original_height : 8, original_width : 138, files : ["health_bg.png"], type : "image"};
 	this.health_bgName = "health_bg";
 	this.health_bg = null;
-	this.healthDescription = { name : "health", original_height : 3, original_width : 69, files : ["health.png"], type : "image"};
+	this.healthDescription = { name : "health", original_height : 8, original_width : 138, files : ["health.png"], type : "image"};
 	this.healthName = "health";
 	this.health = null;
-	this.diceDescription = { name : "dice", original_height : 11, original_width : 66, files : ["dice.png"], type : "image"};
+	this.diceDescription = { name : "dice", original_height : 22, original_width : 132, files : ["dice.png"], type : "image"};
 	this.diceName = "dice";
 	this.dice = null;
-	this.daggerDescription = { name : "dagger", original_height : 18, original_width : 12, files : ["dagger.png"], type : "image"};
+	this.daggerDescription = { name : "dagger", original_height : 31, original_width : 20, files : ["dagger.png"], type : "image"};
 	this.daggerName = "dagger";
 	this.dagger = null;
-	this.abilsDescription = { name : "abils", original_height : 16, original_width : 64, files : ["abils.png"], type : "image"};
+	this.abilsDescription = { name : "abils", original_height : 32, original_width : 128, files : ["abils.png"], type : "image"};
 	this.abilsName = "abils";
 	this.abils = null;
 };
@@ -3427,6 +3501,42 @@ kha_KravurImage.prototype = {
 		q.xadvance = b.xadvance;
 		return q;
 	}
+	,getCharWidth: function(charIndex) {
+		if(this.chars.length == 0) {
+			return 0;
+		}
+		var offset = kha_KravurImage.charBlocks[0];
+		if(charIndex < offset) {
+			return this.chars[0].xadvance;
+		}
+		var _g = 1;
+		var _g1 = kha_KravurImage.charBlocks.length / 2 | 0;
+		while(_g < _g1) {
+			var i = _g++;
+			var prevEnd = kha_KravurImage.charBlocks[i * 2 - 1];
+			var start = kha_KravurImage.charBlocks[i * 2];
+			if(charIndex > start - 1) {
+				offset += start - 1 - prevEnd;
+			}
+		}
+		if(charIndex - offset >= this.chars.length) {
+			return this.chars[0].xadvance;
+		}
+		return this.chars[charIndex - offset].xadvance;
+	}
+	,getHeight: function() {
+		return this.mySize;
+	}
+	,stringWidth: function(str) {
+		var width = 0;
+		var _g = 0;
+		var _g1 = str.length;
+		while(_g < _g1) {
+			var c = _g++;
+			width += this.getCharWidth(HxOverrides.cca(str,c));
+		}
+		return width;
+	}
 	,__class__: kha_KravurImage
 };
 var kha_Kravur = function(blob) {
@@ -3495,6 +3605,12 @@ kha_Kravur.prototype = {
 			return image;
 		}
 		return this.images.h[imageIndex];
+	}
+	,height: function(fontSize) {
+		return this._get(fontSize).getHeight();
+	}
+	,width: function(fontSize,str) {
+		return this._get(fontSize).stringWidth(str);
 	}
 	,unload: function() {
 		this.blob = null;
@@ -4122,6 +4238,11 @@ kha_System.notifyOnFrames = function(listener) {
 };
 kha_System.removeFramesListener = function(listener) {
 	HxOverrides.remove(kha_System.renderListeners,listener);
+};
+kha_System.notifyOnCutCopyPaste = function(cutListener,copyListener,pasteListener) {
+	kha_System.cutListener = cutListener;
+	kha_System.copyListener = copyListener;
+	kha_System.pasteListener = pasteListener;
 };
 kha_System.render = function(framebuffers) {
 	var _g = 0;
@@ -9811,12 +9932,20 @@ kha_graphics2_Graphics.prototype = {
 	}
 	,drawScaledSubImage: function(image,sx,sy,sw,sh,dx,dy,dw,dh) {
 	}
+	,drawRect: function(x,y,width,height,strength) {
+		if(strength == null) {
+			strength = 1.0;
+		}
+	}
 	,fillRect: function(x,y,width,height) {
 	}
 	,drawString: function(text,x,y) {
 	}
 	,set_color: function(color) {
 		return -16777216;
+	}
+	,get_font: function() {
+		return null;
 	}
 	,set_font: function(font) {
 		return null;
@@ -12464,6 +12593,129 @@ kha_graphics4_Graphics2.prototype = $extend(kha_graphics2_Graphics.prototype,{
 	,set_color: function(color) {
 		return this.myColor = color;
 	}
+	,drawRect: function(x,y,width,height,strength) {
+		if(strength == null) {
+			strength = 1.0;
+		}
+		this.imagePainter.end();
+		this.textPainter.end();
+		var _this = this.transformations[this.transformations.length - 1];
+		var value_x = x - strength / 2;
+		var value_y = y + strength / 2;
+		var w = _this._02 * value_x + _this._12 * value_y + _this._22;
+		var x1 = (_this._00 * value_x + _this._10 * value_y + _this._20) / w;
+		var y1 = (_this._01 * value_x + _this._11 * value_y + _this._21) / w;
+		var p1 = new kha_math_FastVector2(x1,y1);
+		var _this1 = this.transformations[this.transformations.length - 1];
+		var value_x1 = x - strength / 2;
+		var value_y1 = y - strength / 2;
+		var w1 = _this1._02 * value_x1 + _this1._12 * value_y1 + _this1._22;
+		var x2 = (_this1._00 * value_x1 + _this1._10 * value_y1 + _this1._20) / w1;
+		var y2 = (_this1._01 * value_x1 + _this1._11 * value_y1 + _this1._21) / w1;
+		var p2 = new kha_math_FastVector2(x2,y2);
+		var _this2 = this.transformations[this.transformations.length - 1];
+		var value_x2 = x + width + strength / 2;
+		var value_y2 = y - strength / 2;
+		var w2 = _this2._02 * value_x2 + _this2._12 * value_y2 + _this2._22;
+		var x3 = (_this2._00 * value_x2 + _this2._10 * value_y2 + _this2._20) / w2;
+		var y3 = (_this2._01 * value_x2 + _this2._11 * value_y2 + _this2._21) / w2;
+		var p3 = new kha_math_FastVector2(x3,y3);
+		var _this3 = this.transformations[this.transformations.length - 1];
+		var value_x3 = x + width + strength / 2;
+		var value_y3 = y + strength / 2;
+		var w3 = _this3._02 * value_x3 + _this3._12 * value_y3 + _this3._22;
+		var x4 = (_this3._00 * value_x3 + _this3._10 * value_y3 + _this3._20) / w3;
+		var y4 = (_this3._01 * value_x3 + _this3._11 * value_y3 + _this3._21) / w3;
+		var p4 = new kha_math_FastVector2(x4,y4);
+		this.coloredPainter.fillRect(this.get_opacity(),this.get_color(),p1.x,p1.y,p2.x,p2.y,p3.x,p3.y,p4.x,p4.y);
+		var _this4 = this.transformations[this.transformations.length - 1];
+		var value_x4 = x - strength / 2;
+		var value_y4 = y + height - strength / 2;
+		var w4 = _this4._02 * value_x4 + _this4._12 * value_y4 + _this4._22;
+		var x5 = (_this4._00 * value_x4 + _this4._10 * value_y4 + _this4._20) / w4;
+		var y5 = (_this4._01 * value_x4 + _this4._11 * value_y4 + _this4._21) / w4;
+		p1 = new kha_math_FastVector2(x5,y5);
+		var _this5 = this.transformations[this.transformations.length - 1];
+		var value_x5 = x - strength / 2;
+		var value_y5 = y + strength / 2;
+		var w5 = _this5._02 * value_x5 + _this5._12 * value_y5 + _this5._22;
+		var x6 = (_this5._00 * value_x5 + _this5._10 * value_y5 + _this5._20) / w5;
+		var y6 = (_this5._01 * value_x5 + _this5._11 * value_y5 + _this5._21) / w5;
+		p2 = new kha_math_FastVector2(x6,y6);
+		var _this6 = this.transformations[this.transformations.length - 1];
+		var value_x6 = x + strength / 2;
+		var value_y6 = y + strength / 2;
+		var w6 = _this6._02 * value_x6 + _this6._12 * value_y6 + _this6._22;
+		var x7 = (_this6._00 * value_x6 + _this6._10 * value_y6 + _this6._20) / w6;
+		var y7 = (_this6._01 * value_x6 + _this6._11 * value_y6 + _this6._21) / w6;
+		p3 = new kha_math_FastVector2(x7,y7);
+		var _this7 = this.transformations[this.transformations.length - 1];
+		var value_x7 = x + strength / 2;
+		var value_y7 = y + height - strength / 2;
+		var w7 = _this7._02 * value_x7 + _this7._12 * value_y7 + _this7._22;
+		var x8 = (_this7._00 * value_x7 + _this7._10 * value_y7 + _this7._20) / w7;
+		var y8 = (_this7._01 * value_x7 + _this7._11 * value_y7 + _this7._21) / w7;
+		p4 = new kha_math_FastVector2(x8,y8);
+		this.coloredPainter.fillRect(this.get_opacity(),this.get_color(),p1.x,p1.y,p2.x,p2.y,p3.x,p3.y,p4.x,p4.y);
+		var _this8 = this.transformations[this.transformations.length - 1];
+		var value_x8 = x - strength / 2;
+		var value_y8 = y + height + strength / 2;
+		var w8 = _this8._02 * value_x8 + _this8._12 * value_y8 + _this8._22;
+		var x9 = (_this8._00 * value_x8 + _this8._10 * value_y8 + _this8._20) / w8;
+		var y9 = (_this8._01 * value_x8 + _this8._11 * value_y8 + _this8._21) / w8;
+		p1 = new kha_math_FastVector2(x9,y9);
+		var _this9 = this.transformations[this.transformations.length - 1];
+		var value_x9 = x - strength / 2;
+		var value_y9 = y + height - strength / 2;
+		var w9 = _this9._02 * value_x9 + _this9._12 * value_y9 + _this9._22;
+		var x10 = (_this9._00 * value_x9 + _this9._10 * value_y9 + _this9._20) / w9;
+		var y10 = (_this9._01 * value_x9 + _this9._11 * value_y9 + _this9._21) / w9;
+		p2 = new kha_math_FastVector2(x10,y10);
+		var _this10 = this.transformations[this.transformations.length - 1];
+		var value_x10 = x + width + strength / 2;
+		var value_y10 = y + height - strength / 2;
+		var w10 = _this10._02 * value_x10 + _this10._12 * value_y10 + _this10._22;
+		var x11 = (_this10._00 * value_x10 + _this10._10 * value_y10 + _this10._20) / w10;
+		var y11 = (_this10._01 * value_x10 + _this10._11 * value_y10 + _this10._21) / w10;
+		p3 = new kha_math_FastVector2(x11,y11);
+		var _this11 = this.transformations[this.transformations.length - 1];
+		var value_x11 = x + width + strength / 2;
+		var value_y11 = y + height + strength / 2;
+		var w11 = _this11._02 * value_x11 + _this11._12 * value_y11 + _this11._22;
+		var x12 = (_this11._00 * value_x11 + _this11._10 * value_y11 + _this11._20) / w11;
+		var y12 = (_this11._01 * value_x11 + _this11._11 * value_y11 + _this11._21) / w11;
+		p4 = new kha_math_FastVector2(x12,y12);
+		this.coloredPainter.fillRect(this.get_opacity(),this.get_color(),p1.x,p1.y,p2.x,p2.y,p3.x,p3.y,p4.x,p4.y);
+		var _this12 = this.transformations[this.transformations.length - 1];
+		var value_x12 = x + width - strength / 2;
+		var value_y12 = y + height - strength / 2;
+		var w12 = _this12._02 * value_x12 + _this12._12 * value_y12 + _this12._22;
+		var x13 = (_this12._00 * value_x12 + _this12._10 * value_y12 + _this12._20) / w12;
+		var y13 = (_this12._01 * value_x12 + _this12._11 * value_y12 + _this12._21) / w12;
+		p1 = new kha_math_FastVector2(x13,y13);
+		var _this13 = this.transformations[this.transformations.length - 1];
+		var value_x13 = x + width - strength / 2;
+		var value_y13 = y + strength / 2;
+		var w13 = _this13._02 * value_x13 + _this13._12 * value_y13 + _this13._22;
+		var x14 = (_this13._00 * value_x13 + _this13._10 * value_y13 + _this13._20) / w13;
+		var y14 = (_this13._01 * value_x13 + _this13._11 * value_y13 + _this13._21) / w13;
+		p2 = new kha_math_FastVector2(x14,y14);
+		var _this14 = this.transformations[this.transformations.length - 1];
+		var value_x14 = x + width + strength / 2;
+		var value_y14 = y + strength / 2;
+		var w14 = _this14._02 * value_x14 + _this14._12 * value_y14 + _this14._22;
+		var x15 = (_this14._00 * value_x14 + _this14._10 * value_y14 + _this14._20) / w14;
+		var y15 = (_this14._01 * value_x14 + _this14._11 * value_y14 + _this14._21) / w14;
+		p3 = new kha_math_FastVector2(x15,y15);
+		var _this15 = this.transformations[this.transformations.length - 1];
+		var value_x15 = x + width + strength / 2;
+		var value_y15 = y + height - strength / 2;
+		var w15 = _this15._02 * value_x15 + _this15._12 * value_y15 + _this15._22;
+		var x16 = (_this15._00 * value_x15 + _this15._10 * value_y15 + _this15._20) / w15;
+		var y16 = (_this15._01 * value_x15 + _this15._11 * value_y15 + _this15._21) / w15;
+		p4 = new kha_math_FastVector2(x16,y16);
+		this.coloredPainter.fillRect(this.get_opacity(),this.get_color(),p1.x,p1.y,p2.x,p2.y,p3.x,p3.y,p4.x,p4.y);
+	}
 	,fillRect: function(x,y,width,height) {
 		this.imagePainter.end();
 		this.textPainter.end();
@@ -12511,6 +12763,9 @@ kha_graphics4_Graphics2.prototype = $extend(kha_graphics2_Graphics.prototype,{
 			_this.drawBuffer(false);
 		}
 		this.textPainter.drawString(text,this.get_opacity(),this.get_color(),x,y,this.transformations[this.transformations.length - 1]);
+	}
+	,get_font: function() {
+		return this.myFont;
 	}
 	,set_font: function(font) {
 		this.textPainter.setFont(font);
@@ -14048,6 +14303,17 @@ kha_js_CanvasGraphics.prototype = $extend(kha_graphics2_Graphics.prototype,{
 		this.canvas.fillStyle = "rgba(" + ((color & 16711680) >>> 16) + "," + ((color & 65280) >>> 8) + "," + (color & 255) + "," + (color >>> 24) * 0.00392156862745098 + ")";
 		return color;
 	}
+	,drawRect: function(x,y,width,height,strength) {
+		if(strength == null) {
+			strength = 1.0;
+		}
+		this.canvas.beginPath();
+		var oldStrength = this.canvas.lineWidth;
+		this.canvas.lineWidth = Math.round(strength);
+		this.canvas.rect(x,y,width,height);
+		this.canvas.stroke();
+		this.canvas.lineWidth = oldStrength;
+	}
 	,fillRect: function(x,y,width,height) {
 		var tmp = this.get_opacity();
 		this.canvas.globalAlpha = tmp * ((this.myColor >>> 24) * 0.00392156862745098);
@@ -14076,6 +14342,9 @@ kha_js_CanvasGraphics.prototype = $extend(kha_graphics2_Graphics.prototype,{
 	}
 	,set_font: function(font) {
 		this.webfont = js_Boot.__cast(font , kha_js_Font);
+		return this.webfont;
+	}
+	,get_font: function() {
 		return this.webfont;
 	}
 	,scissor: function(x,y,width,height) {
@@ -14911,6 +15180,23 @@ kha_math_FastMatrix4.prototype = {
 	,_33: null
 	,__class__: kha_math_FastMatrix4
 };
+var kha_math_FastVector2 = function(x,y) {
+	if(y == null) {
+		y = 0;
+	}
+	if(x == null) {
+		x = 0;
+	}
+	this.x = x;
+	this.y = y;
+};
+$hxClasses["kha.math.FastVector2"] = kha_math_FastVector2;
+kha_math_FastVector2.__name__ = true;
+kha_math_FastVector2.prototype = {
+	x: null
+	,y: null
+	,__class__: kha_math_FastVector2
+};
 var kha_netsync_ControllerBuilder = function() { };
 $hxClasses["kha.netsync.ControllerBuilder"] = kha_netsync_ControllerBuilder;
 kha_netsync_ControllerBuilder.__name__ = true;
@@ -14945,6 +15231,505 @@ kha_netsync_Session.prototype = {
 	}
 	,__class__: kha_netsync_Session
 };
+var khm_imgui_ImguiSets = function(autoNotifyInput,redrawOnEvents,debug) {
+	this.debug = false;
+	this.redrawOnEvents = false;
+	this.autoNotifyInput = true;
+	if(autoNotifyInput != null) {
+		this.autoNotifyInput = autoNotifyInput;
+	}
+	if(redrawOnEvents != null) {
+		this.redrawOnEvents = redrawOnEvents;
+	}
+	if(debug != null) {
+		this.debug = debug;
+	}
+};
+$hxClasses["khm.imgui.ImguiSets"] = khm_imgui_ImguiSets;
+khm_imgui_ImguiSets.__name__ = true;
+khm_imgui_ImguiSets.prototype = {
+	autoNotifyInput: null
+	,redrawOnEvents: null
+	,debug: null
+	,__class__: khm_imgui_ImguiSets
+};
+var khm_imgui_Imgui = function(sets) {
+	this.blockKeyPress = false;
+	this.id = 0;
+	this.frame = [];
+	this.lastFrame = [];
+	this.keys = new haxe_ds_IntMap();
+	this.blockedKeys = new haxe_ds_IntMap();
+	var _g = [];
+	_g.push(false);
+	_g.push(false);
+	_g.push(false);
+	_g.push(false);
+	_g.push(false);
+	_g.push(false);
+	_g.push(false);
+	_g.push(false);
+	_g.push(false);
+	_g.push(false);
+	this.pointersUp = _g;
+	var _g1 = [];
+	_g1.push(false);
+	_g1.push(false);
+	_g1.push(false);
+	_g1.push(false);
+	_g1.push(false);
+	_g1.push(false);
+	_g1.push(false);
+	_g1.push(false);
+	_g1.push(false);
+	_g1.push(false);
+	this.pointersDown = _g1;
+	this.isCopyText = false;
+	this.isCutText = false;
+	this.textToCopy = "";
+	this.textToPaste = "";
+	this.keyboardFocus = false;
+	this.keyChar = "";
+	this.mouseWheel = 0;
+	this.focusId = 0;
+	var _g2 = [];
+	_g2.push(0);
+	_g2.push(0);
+	_g2.push(0);
+	_g2.push(0);
+	_g2.push(0);
+	_g2.push(0);
+	_g2.push(0);
+	_g2.push(0);
+	_g2.push(0);
+	_g2.push(0);
+	this.widgetGroups = _g2;
+	var _g3 = [];
+	_g3.push(0);
+	_g3.push(0);
+	_g3.push(0);
+	_g3.push(0);
+	_g3.push(0);
+	_g3.push(0);
+	_g3.push(0);
+	_g3.push(0);
+	_g3.push(0);
+	_g3.push(0);
+	this.activeIds = _g3;
+	var _g4 = [];
+	_g4.push(0);
+	_g4.push(0);
+	_g4.push(0);
+	_g4.push(0);
+	_g4.push(0);
+	_g4.push(0);
+	_g4.push(0);
+	_g4.push(0);
+	_g4.push(0);
+	_g4.push(0);
+	this.lastHoverIds = _g4;
+	var _g5 = [];
+	_g5.push(0);
+	_g5.push(0);
+	_g5.push(0);
+	_g5.push(0);
+	_g5.push(0);
+	_g5.push(0);
+	_g5.push(0);
+	_g5.push(0);
+	_g5.push(0);
+	_g5.push(0);
+	this.hoverIds = _g5;
+	var _g6 = [];
+	_g6.push({ id : 0, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	_g6.push({ id : 1, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	_g6.push({ id : 2, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	_g6.push({ id : 3, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	_g6.push({ id : 4, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	_g6.push({ id : 5, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	_g6.push({ id : 6, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	_g6.push({ id : 7, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	_g6.push({ id : 8, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	_g6.push({ id : 9, startX : 0, startY : 0, x : 0, y : 0, moveX : 0, moveY : 0, type : 0, isDown : false, isTouch : false, isActive : false});
+	this.pointers = _g6;
+	this.autoNotifyInput = sets.autoNotifyInput;
+	this.redrawOnEvents = sets.redrawOnEvents;
+	this.debug = sets.debug;
+	if(this.autoNotifyInput) {
+		if(kha_input_Mouse.get() != null) {
+			kha_input_Mouse.get().notify($bind(this,this.onMouseDown),$bind(this,this.onMouseUp),$bind(this,this.onMouseMove),$bind(this,this.onMouseWheel));
+		}
+		if(kha_input_Keyboard.get() != null) {
+			kha_input_Keyboard.get().notify($bind(this,this.onKeyDown),$bind(this,this.onKeyUp),$bind(this,this.onKeyPress));
+		}
+	}
+	kha_System.notifyOnCutCopyPaste($bind(this,this.onCut),$bind(this,this.onCopy),$bind(this,this.onPaste));
+};
+$hxClasses["khm.imgui.Imgui"] = khm_imgui_Imgui;
+khm_imgui_Imgui.__name__ = true;
+khm_imgui_Imgui.prototype = {
+	pointers: null
+	,hoverIds: null
+	,lastHoverIds: null
+	,activeIds: null
+	,widgetGroups: null
+	,focusId: null
+	,mouseWheel: null
+	,keyChar: null
+	,keyboardFocus: null
+	,g: null
+	,textToPaste: null
+	,textToCopy: null
+	,isCutText: null
+	,isCopyText: null
+	,autoNotifyInput: null
+	,redrawOnEvents: null
+	,debug: null
+	,pointersDown: null
+	,pointersUp: null
+	,blockedKeys: null
+	,keys: null
+	,lastFrame: null
+	,frame: null
+	,scissorRect: null
+	,id: null
+	,blockKeyPress: null
+	,onPointerDown: function(p) {
+		if(this.pointers[p.id] != p) {
+			this.pointers[p.id] = p;
+		}
+		this.keyboardFocus = false;
+		this.pointersDown[p.id] = true;
+		if(this.redrawOnEvents) {
+			if(p.isTouch) {
+				var _g = 0;
+				var _g1 = this.lastFrame;
+				while(_g < _g1.length) {
+					var rect = _g1[_g];
+					++_g;
+					this.checkWidgetState(rect);
+					if(this.activeIds[p.id] != 0) {
+						break;
+					}
+				}
+			} else {
+				this.activeIds[p.id] = this.hoverIds[p.id];
+			}
+		}
+		return this.isPointerBlocked(p.id,p.x,p.y);
+	}
+	,onPointerMove: function(p) {
+		if(this.pointers[p.id] != p) {
+			this.pointers[p.id] = p;
+		}
+		return this.isPointerBlocked(p.id,p.x,p.y);
+	}
+	,onPointerUp: function(p) {
+		if(this.pointers[p.id] != p) {
+			this.pointers[p.id] = p;
+		}
+		this.pointersUp[p.id] = true;
+		if(this.redrawOnEvents) {
+			this.pointersDown[p.id] = false;
+			this.pointersUp[p.id] = false;
+		}
+		return this.isPointerBlocked(p.id,p.x,p.y);
+	}
+	,isPointerBlocked: function(id,x,y) {
+		if(this.hoverIds[id] > 0) {
+			return true;
+		}
+		var _g = 0;
+		var _g1 = this.lastFrame;
+		while(_g < _g1.length) {
+			var rect = _g1[_g];
+			++_g;
+			if(x >= rect[1] && y >= rect[2] && x < rect[1] + rect[3] && y < rect[2] + rect[4]) {
+				return true;
+			}
+		}
+		return false;
+	}
+	,onCut: function() {
+		this.isCutText = true;
+		if(this.textToCopy == "") {
+			return null;
+		}
+		return this.textToCopy;
+	}
+	,onCopy: function() {
+		this.isCopyText = true;
+		if(this.textToCopy == "") {
+			return null;
+		}
+		return this.textToCopy;
+	}
+	,onPaste: function(s) {
+		this.textToPaste = s;
+	}
+	,onMouseDown: function(button,x,y) {
+		this.pointers[0].startX = x;
+		this.pointers[0].startY = y;
+		this.pointers[0].x = x;
+		this.pointers[0].y = y;
+		this.pointers[0].type = button;
+		this.pointers[0].isDown = true;
+		this.pointers[0].isActive = true;
+		this.pointers[0].isTouch = false;
+		return this.onPointerDown(this.pointers[0]);
+	}
+	,onMouseMove: function(x,y,mx,my) {
+		this.pointers[0].x = x;
+		this.pointers[0].y = y;
+		this.pointers[0].moveX = mx;
+		this.pointers[0].moveY = my;
+		this.pointers[0].isActive = true;
+		return this.onPointerMove(this.pointers[0]);
+	}
+	,onMouseUp: function(button,x,y) {
+		if(!this.pointers[0].isActive) {
+			return false;
+		}
+		this.pointers[0].x = x;
+		this.pointers[0].y = y;
+		this.pointers[0].type = button;
+		this.pointers[0].isDown = false;
+		return this.onPointerUp(this.pointers[0]);
+	}
+	,onMouseWheel: function(delta) {
+		this.mouseWheel = delta;
+		return this.isPointerBlocked(0,this.pointers[0].x,this.pointers[0].y);
+	}
+	,onKeyDown: function(key) {
+		if(this.somethingActive()) {
+			return true;
+		}
+		this.keyboardFocus = true;
+		if(this.blockedKeys.h[key]) {
+			this.blockKeyPress = true;
+			this.keys.h[key] = true;
+		}
+		return this.blockedKeys.h[key];
+	}
+	,onKeyUp: function(key) {
+		if(this.somethingActive()) {
+			return true;
+		}
+		this.keyboardFocus = true;
+		if(this.blockedKeys.h[key]) {
+			this.keys.h[key] = false;
+		}
+		return this.blockedKeys.h[key];
+	}
+	,onKeyPress: function(char) {
+		this.keyChar = char;
+		return this.focusId > 0;
+	}
+	,begin: function(g) {
+		this.g = g;
+		if(!this.keyboardFocus) {
+			this.focusId = 0;
+		}
+		var _g = 0;
+		var _g1 = this.hoverIds.length;
+		while(_g < _g1) {
+			var i = _g++;
+			this.lastHoverIds[i] = this.hoverIds[i];
+			this.hoverIds[i] = 0;
+			this.widgetGroups[i] = 0;
+		}
+		var i1 = this.blockedKeys.keys();
+		while(i1.hasNext()) {
+			var i2 = i1.next();
+			this.blockedKeys.h[i2] = false;
+		}
+		if(this.blockKeyPress) {
+			this.keyChar = "";
+		}
+		this.blockKeyPress = false;
+		this.id = 0;
+	}
+	,end: function() {
+		var _g = 0;
+		var _g1 = this.pointers;
+		while(_g < _g1.length) {
+			var p = _g1[_g];
+			++_g;
+			if(!this.pointersDown[p.id]) {
+				this.activeIds[p.id] = 0;
+			} else if(this.activeIds[p.id] == 0) {
+				this.activeIds[p.id] = -1;
+			}
+			if(this.pointersUp[p.id]) {
+				this.pointersDown[p.id] = false;
+				this.pointersUp[p.id] = false;
+			}
+		}
+		this.mouseWheel = 0;
+		this.keyChar = "";
+		this.textToPaste = "";
+		this.isCutText = false;
+		this.isCopyText = false;
+		this.lastFrame = this.frame;
+		this.frame = [];
+		if(!this.debug) {
+			return;
+		}
+		var _g2 = 0;
+		var _g3 = this.lastFrame;
+		while(_g2 < _g3.length) {
+			var rect = _g3[_g2];
+			++_g2;
+			this.g.set_color(-1996554240);
+			this.g.drawRect(rect[1] + 0.5,rect[2] + 0.5,rect[3] - 1,rect[4] - 1);
+		}
+	}
+	,addWidget: function(rect) {
+		if(this.scissorRect != null) {
+			var s = this.scissorRect;
+			var difX = s[1] - rect[1];
+			var difY = s[2] - rect[2];
+			if(difX > 0) {
+				rect[1] += difX;
+				rect[3] -= difX;
+			}
+			if(difY > 0) {
+				rect[2] += difY;
+				rect[4] -= difY;
+			}
+			var difX1 = rect[3] + rect[1] - s[3] - s[1];
+			var difY1 = rect[4] + rect[2] - s[4] - s[2];
+			if(difX1 > 0) {
+				rect[3] -= difX1;
+			}
+			if(difY1 > 0) {
+				rect[4] -= difY1;
+			}
+			if(rect[3] < 0) {
+				rect[3] = 0;
+			}
+			if(rect[4] < 0) {
+				rect[4] = 0;
+			}
+		}
+		this.frame.push(rect);
+	}
+	,checkWidgetState: function(rect) {
+		var p = this.isInside(rect[0],rect[1],rect[2],rect[3],rect[4]);
+		if(p == null) {
+			return;
+		}
+		var id = p.id;
+		if(rect[5] != 0) {
+			var _g = 0;
+			var _g1 = this.widgetGroups.length;
+			while(_g < _g1) {
+				var i = _g++;
+				if(this.widgetGroups[i] == rect[5]) {
+					return;
+				}
+			}
+			this.widgetGroups[id] = rect[5];
+		}
+		this.hoverIds[id] = rect[0];
+		if(this.activeIds[id] == 0 && this.pointersDown[id]) {
+			this.activeIds[id] = rect[0];
+		}
+	}
+	,isInside: function(id,x,y,w,h) {
+		var _g = 0;
+		var _g1 = this.pointers;
+		while(_g < _g1.length) {
+			var p = _g1[_g];
+			++_g;
+			if(!this.pointersDown[p.id] && !p.isActive) {
+				continue;
+			}
+			if(p.x < x || p.y < y || p.x >= x + w || p.y >= y + h) {
+				continue;
+			}
+			var _g2 = 0;
+			var _g11 = this.lastFrame;
+			while(_g2 < _g11.length) {
+				var rect = _g11[_g2];
+				++_g2;
+				if(rect[0] <= id) {
+					continue;
+				}
+				if(p.x >= rect[1] && p.y >= rect[2] && p.x < rect[1] + rect[3] && p.y < rect[2] + rect[4]) {
+					return null;
+				}
+			}
+			return p;
+		}
+		return null;
+	}
+	,isHovered: function(id) {
+		var _g = 0;
+		var _g1 = this.hoverIds;
+		while(_g < _g1.length) {
+			var i = _g1[_g];
+			++_g;
+			if(i == id) {
+				return true;
+			}
+		}
+		return false;
+	}
+	,isActive: function(id) {
+		var _g = 0;
+		var _g1 = this.activeIds.length;
+		while(_g < _g1) {
+			var i = _g++;
+			if(this.activeIds[i] == id && (this.hoverIds[i] == id || this.focusId == id)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	,somethingActive: function() {
+		var _g = 0;
+		var _g1 = this.activeIds;
+		while(_g < _g1.length) {
+			var i = _g1[_g];
+			++_g;
+			if(i > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+	,isWidgetClicked: function(id) {
+		var _g = 0;
+		var _g1 = this.pointers;
+		while(_g < _g1.length) {
+			var p = _g1[_g];
+			++_g;
+			if(this.activeIds[p.id] != id) {
+				continue;
+			}
+			if(this.pointersDown[p.id]) {
+				continue;
+			}
+			if(!p.isTouch) {
+				if(this.hoverIds[p.id] != id && this.focusId != id) {
+					continue;
+				}
+			} else if(this.lastHoverIds[p.id] != id) {
+				continue;
+			}
+			return true;
+		}
+		return false;
+	}
+	,__class__: khm_imgui_Imgui
+};
+var khm_imgui_WidgetState = $hxEnums["khm.imgui.WidgetState"] = { __ename__ : true, __constructs__ : ["Idle","Hover","Focus","Active"]
+	,Idle: {_hx_index:0,__enum__:"khm.imgui.WidgetState",toString:$estr}
+	,Hover: {_hx_index:1,__enum__:"khm.imgui.WidgetState",toString:$estr}
+	,Focus: {_hx_index:2,__enum__:"khm.imgui.WidgetState",toString:$estr}
+	,Active: {_hx_index:3,__enum__:"khm.imgui.WidgetState",toString:$estr}
+};
 var $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = m.bind(o); o.hx__closures__[m.__id__] = f; } return f; }
 $hxClasses["Math"] = Math;
@@ -14969,6 +15754,12 @@ Object.defineProperty(js__$Boot_HaxeError.prototype,"message",{ get : function()
 if(ArrayBuffer.prototype.slice == null) {
 	ArrayBuffer.prototype.slice = js_html__$ArrayBuffer_ArrayBufferCompat.sliceImpl;
 }
+Widgets.bgColor = -15461351;
+Widgets.hoverColor = -11184811;
+Widgets.activeColor = -1408480;
+Widgets.focusColor = -2145352982;
+Widgets.buttonW = 70;
+Widgets.buttonH = 40;
 khm_Screen.isTouch = false;
 khm_Screen.samplesPerPixel = 1;
 khm_Screen.defaultScale = 1.0;
