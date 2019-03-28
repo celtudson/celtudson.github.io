@@ -833,6 +833,9 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 			++_g2;
 			being1.onRender(g);
 		}
+		g.set_color(-1);
+		g.drawString("" + this.teamA.length,10,13);
+		g.drawString("" + this.teamB.length,237,13);
 		this.ui.begin(g);
 		if(Widgets.button(this.ui,150,4,"Restart")) {
 			this.newGame();
@@ -867,8 +870,8 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 	var inverted = direction == -1;
 	switch(type) {
 	case 0:
-		this.sprite = new draw_Sprite("saw",inverted);
-		this.sprite.setFrames(4,4);
+		this.idleSprite = new draw_Sprite("saw",inverted);
+		this.idleSprite.setFrames(4,4);
 		this.setRects(0,16,12,10);
 		this.hp = 40;
 		this.damage = 0.1;
@@ -876,8 +879,8 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 		this.maxHp = this.hp;
 		break;
 	case 1:
-		this.sprite = new draw_Sprite("hammer",inverted);
-		this.sprite.setFrames(10,4);
+		this.idleSprite = new draw_Sprite("hammer",inverted);
+		this.idleSprite.setFrames(10,4);
 		this.setRects(8,5,13,5);
 		this.hp = 10;
 		this.damage = 0.03;
@@ -897,8 +900,9 @@ game_units_Being.__name__ = true;
 game_units_Being.prototype = {
 	game: null
 	,enemies: null
-	,sprite: null
 	,direction: null
+	,isAttack: null
+	,idleSprite: null
 	,bodyRect: null
 	,atkRect: null
 	,hp: null
@@ -923,14 +927,14 @@ game_units_Being.prototype = {
 		return false;
 	}
 	,onUpdate: function() {
-		var stop = false;
+		this.isAttack = false;
 		var _g = 0;
 		var _g1 = this.enemies;
 		while(_g < _g1.length) {
 			var enemy = _g1[_g];
 			++_g;
 			if(enemy.isCollideWith(this.x,this.atkRect)) {
-				stop = true;
+				this.isAttack = true;
 				if(enemy.hurt(this.damage)) {
 					if(this.direction == 1) {
 						this.game.removeBeing(false,enemy);
@@ -940,14 +944,15 @@ game_units_Being.prototype = {
 				}
 			}
 		}
-		if(stop == false) {
+		if(this.isAttack == false) {
 			this.x += this.direction * this.speed;
 		}
-		this.sprite.onUpdate();
+		this.idleSprite.onUpdate();
 	}
 	,onRender: function(g) {
-		this.sprite.onRender(g,this.x,this.y);
-		g.drawString("" + (this.hp | 0),this.x,this.y - 50);
+		var x0 = (this.x * this.game.scale | 0) / this.game.scale;
+		this.idleSprite.onRender(g,x0,this.y);
+		g.drawString("" + (this.hp | 0),x0,this.y - 50);
 	}
 	,hurt: function(delta) {
 		this.hp -= delta;
