@@ -962,8 +962,7 @@ game_units_Being.prototype = {
 				if(this.params.periodicAttack > 0 && this.timeToAttack == false) {
 					continue;
 				}
-				this.timeToAttack = false;
-				haxe_Log.trace("isAttack",{ fileName : "game/units/Being.hx", lineNumber : 102, className : "game.units.Being", methodName : "onUpdate"});
+				haxe_Log.trace("isAttack",{ fileName : "game/units/Being.hx", lineNumber : 101, className : "game.units.Being", methodName : "onUpdate"});
 				if(enemy.hurt(this.params.damage)) {
 					if(this.direction == 1) {
 						this.game.removeBeing(false,enemy);
@@ -973,6 +972,7 @@ game_units_Being.prototype = {
 				}
 			}
 		}
+		this.timeToAttack = false;
 		if(this.isAttack == false) {
 			this.idleSprite.onUpdate();
 			if(this.lastIsAttack) {
