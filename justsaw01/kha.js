@@ -374,7 +374,7 @@ Loader.prototype = $extend(khm_Screen.prototype,{
 				fontGlyphs.push(i1);
 			}
 			kha_graphics2_Graphics.fontGlyphs = fontGlyphs;
-			draw_Atlas.init();
+			khm_utils_Atlas.init();
 			new game_Game().onInit();
 		});
 	}
@@ -581,128 +581,6 @@ Widgets.button = function(ui,x,y,text) {
 	g.drawString(text,x + w / 2 - textW / 2,y + h / 2 - textH / 2);
 	return ui.isWidgetClicked(id);
 };
-var draw_Atlas = function() { };
-$hxClasses["draw.Atlas"] = draw_Atlas;
-draw_Atlas.__name__ = true;
-draw_Atlas.init = function() {
-	draw_Atlas.keys = [];
-	var fields = Reflect.fields(kha_Assets.images);
-	var i = 0;
-	var _g = 0;
-	while(_g < fields.length) {
-		var field = fields[_g];
-		++_g;
-		if(new EReg("(Name|Description|names)$","").match(field)) {
-			continue;
-		}
-		if(new EReg("(walls|spikes|mines|powerups)$","").match(field)) {
-			continue;
-		}
-		draw_Atlas.keys.push(field);
-		++i;
-	}
-	draw_Atlas.keys.sort(function(a,b) {
-		var img = Reflect.field(kha_Assets.images,a);
-		var img2 = Reflect.field(kha_Assets.images,b);
-		var size = img.get_height();
-		var size2 = img2.get_height();
-		if(size > size2) {
-			return -1;
-		} else if(size < size2) {
-			return 1;
-		}
-		return 0;
-	});
-	var _g1 = new haxe_ds_StringMap();
-	var _g11 = 0;
-	var _g2 = draw_Atlas.keys.length;
-	while(_g11 < _g2) {
-		var i1 = _g11++;
-		var key = draw_Atlas.keys[i1];
-		if(__map_reserved[key] != null) {
-			_g1.setReserved(key,i1);
-		} else {
-			_g1.h[key] = i1;
-		}
-	}
-	draw_Atlas.map = _g1;
-	draw_Atlas.offsX = [];
-	draw_Atlas.offsY = [];
-	draw_Atlas.sizesW = [];
-	draw_Atlas.sizesH = [];
-	draw_Atlas.atlas = kha_Image.createRenderTarget(draw_Atlas.maxSize,draw_Atlas.maxSize);
-	var g = draw_Atlas.atlas.get_g2();
-	var x = 0;
-	var y = 0;
-	var blockW = 0;
-	var blockY = 0;
-	var lineY = y;
-	var lineH = 0;
-	g.begin(true,0);
-	var _g3 = 0;
-	var _g4 = draw_Atlas.keys.length;
-	while(_g3 < _g4) {
-		var i2 = _g3++;
-		var img1 = Reflect.field(kha_Assets.images,draw_Atlas.keys[i2]);
-		g.drawImage(img1,x,y);
-		draw_Atlas.offsX.push(x);
-		draw_Atlas.offsY.push(y);
-		draw_Atlas.sizesW.push(img1.get_width());
-		draw_Atlas.sizesH.push(img1.get_height());
-		if(i2 == draw_Atlas.keys.length - 1) {
-			break;
-		}
-		var next = Reflect.field(kha_Assets.images,draw_Atlas.keys[i2 + 1]);
-		if(lineH < img1.get_height()) {
-			lineH = img1.get_height();
-		}
-		if(blockW < img1.get_width()) {
-			blockW = img1.get_width();
-		}
-		blockY += img1.get_height();
-		if(blockY + next.get_height() < lineH) {
-			y += next.get_height();
-			blockY += next.get_height();
-			if(blockW < next.get_width()) {
-				blockW = next.get_width();
-			}
-		} else {
-			x += blockW;
-			y = lineY;
-			blockW = next.get_width();
-			blockY = 0;
-		}
-		if(x + next.get_width() >= draw_Atlas.maxSize) {
-			lineY += lineH;
-			x = 0;
-			y = lineY;
-			blockW = next.get_width();
-			blockY = 0;
-			lineH = 0;
-		}
-		++x;
-		++y;
-	}
-	g.end();
-};
-draw_Atlas.drawSubImage = function(g,img,x,y,sx,sy,sw,sh) {
-	var _this = draw_Atlas.map;
-	var id = __map_reserved[img] != null ? _this.getReserved(img) : _this.h[img];
-	g.drawSubImage(draw_Atlas.atlas,x,y,draw_Atlas.offsX[id] + sx,draw_Atlas.offsY[id] + sy,sw,sh);
-};
-draw_Atlas.getSizeW = function(img) {
-	var _this = draw_Atlas.map;
-	return draw_Atlas.sizesW[__map_reserved[img] != null ? _this.getReserved(img) : _this.h[img]];
-};
-draw_Atlas.getSizeH = function(img) {
-	var _this = draw_Atlas.map;
-	return draw_Atlas.sizesH[__map_reserved[img] != null ? _this.getReserved(img) : _this.h[img]];
-};
-draw_Atlas.drawScaledSubImage = function(g,img,x,y,scaleX,scaleY,sx,sy,sw,sh) {
-	var _this = draw_Atlas.map;
-	var id = __map_reserved[img] != null ? _this.getReserved(img) : _this.h[img];
-	g.drawScaledSubImage(draw_Atlas.atlas,draw_Atlas.offsX[id] + sx,draw_Atlas.offsY[id] + sy,sw,sh,x,y,sw * scaleX,sh * scaleY);
-};
 var draw_Sprite = function(img,directionX,offX,offY) {
 	if(offY == null) {
 		offY = 0;
@@ -712,7 +590,7 @@ var draw_Sprite = function(img,directionX,offX,offY) {
 	}
 	this.img = img;
 	this.directionX = directionX;
-	this.frameH = draw_Atlas.getSizeH(img);
+	this.frameH = img.get_height();
 	this.offX = offX;
 	this.offY = offY;
 	this.allTicks = 0;
@@ -722,6 +600,7 @@ draw_Sprite.__name__ = true;
 draw_Sprite.prototype = {
 	img: null
 	,directionX: null
+	,drawX: null
 	,frameW: null
 	,frameH: null
 	,offX: null
@@ -738,7 +617,7 @@ draw_Sprite.prototype = {
 		this.ticksPerFrame = ticks - 1;
 		this.frameMax = max - 1;
 		this.frameI = startFrame;
-		this.frameW = draw_Atlas.getSizeW(this.img) / max | 0;
+		this.frameW = this.img.get_width() / max | 0;
 	}
 	,setFrame: function(startFrame) {
 		this.frameI = startFrame;
@@ -760,18 +639,23 @@ draw_Sprite.prototype = {
 	}
 	,onRender: function(g,x,y) {
 		g.set_color(-1);
+		var x0 = this.offX + x;
+		var y0 = this.offY + y - this.frameH;
 		if(this.directionX == 1) {
 			var offX = this.directionX * this.offX;
-			draw_Atlas.drawSubImage(g,this.img,offX + x,this.offY + y - this.frameH,this.frameW * this.frameI,0,this.frameW,this.frameH);
+			khm_utils_Atlas.drawSubImage(g,this.img,x0,y0,this.frameW * this.frameI,0,this.frameW,this.frameH);
+			this.drawX = x + this.frameW / 2;
 		} else {
 			var offX1 = this.directionX * this.offX;
-			draw_Atlas.drawScaledSubImage(g,this.img,offX1 + x,this.offY + y - this.frameH,-1,1,this.frameW * this.frameI,0,this.frameW,this.frameH);
+			khm_utils_Atlas.drawScaledSubImage(g,this.img,this.frameW * this.frameI,0,this.frameW,this.frameH,x0,y0,-this.frameW,this.frameH);
+			this.drawX = x - this.frameW / 2;
 		}
-		g.drawString("" + this.allTicks,x + 24,y);
 	}
 	,__class__: draw_Sprite
 };
 var game_Game = function() {
+	this.queueForRemoveB = [];
+	this.queueForRemoveA = [];
 	this.teamB = [];
 	this.teamA = [];
 	khm_Screen.call(this);
@@ -781,24 +665,26 @@ game_Game.__name__ = true;
 game_Game.__super__ = khm_Screen;
 game_Game.prototype = $extend(khm_Screen.prototype,{
 	ui: null
-	,imgMain: null
 	,teamA: null
 	,teamB: null
+	,queueForRemoveA: null
+	,queueForRemoveB: null
 	,onInit: function() {
 		this.ui = new khm_imgui_Imgui(new khm_imgui_ImguiSets(false,null,null));
 		var ui = this.ui;
 		Widgets.buttonW = 20;
 		Widgets.buttonH = 20;
-		this.imgMain = kha_Assets.images.saw;
 		this.show();
 		this.setScale(3);
 		this.newGame();
 	}
 	,newGame: function() {
 		this.teamA.length = 0;
-		this.teamA.push(new game_units_Being(this,0,40,null,this.teamB));
+		this.teamA.push(new game_units_Being(this,0,5,null,this.teamB));
+		this.teamA.push(new game_units_Being(this,1,40,null,this.teamB));
 		this.teamB.length = 0;
-		this.teamB.push(new game_units_Being(this,0,40,-1,this.teamA));
+		this.teamB.push(new game_units_Being(this,0,5,-1,this.teamA));
+		this.teamB.push(new game_units_Being(this,1,40,-1,this.teamA));
 	}
 	,onMouseDown: function(p) {
 		if(this.ui.onPointerDown(p)) {
@@ -827,6 +713,9 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 			var being = _g1[_g];
 			++_g;
 			being.onUpdate();
+			if(being.x > 267) {
+				HxOverrides.remove(this.teamA,being);
+			}
 		}
 		var _g2 = 0;
 		var _g3 = this.teamB;
@@ -834,27 +723,44 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 			var being1 = _g3[_g2];
 			++_g2;
 			being1.onUpdate();
+			if(being1.x < 0) {
+				HxOverrides.remove(this.teamB,being1);
+			}
 		}
+		var _g4 = 0;
+		var _g5 = this.queueForRemoveA;
+		while(_g4 < _g5.length) {
+			var being2 = _g5[_g4];
+			++_g4;
+			HxOverrides.remove(this.teamA,being2);
+		}
+		this.queueForRemoveA.length = 0;
+		var _g6 = 0;
+		var _g7 = this.queueForRemoveB;
+		while(_g6 < _g7.length) {
+			var being3 = _g7[_g6];
+			++_g6;
+			HxOverrides.remove(this.teamB,being3);
+		}
+		this.queueForRemoveB.length = 0;
 	}
 	,onRender: function(canvas) {
 		var g = canvas.get_g2();
 		g.begin();
 		g.set_color(-1);
 		g.set_font(kha_Assets.fonts.OpenSans_Regular);
-		g.set_fontSize(16);
+		g.set_fontSize(13);
+		var max = Math.max(this.teamA.length,this.teamB.length) | 0;
 		var _g = 0;
-		var _g1 = this.teamB;
-		while(_g < _g1.length) {
-			var being = _g1[_g];
-			++_g;
-			being.onRender(g);
-		}
-		var _g2 = 0;
-		var _g3 = this.teamA;
-		while(_g2 < _g3.length) {
-			var being1 = _g3[_g2];
-			++_g2;
-			being1.onRender(g);
+		var _g1 = max;
+		while(_g < _g1) {
+			var i = _g++;
+			if(i < this.teamB.length) {
+				this.teamB[i].onRender(g);
+			}
+			if(i < this.teamA.length) {
+				this.teamA[i].onRender(g);
+			}
 		}
 		g.set_color(-1);
 		g.drawString("" + this.teamA.length,10,13);
@@ -864,20 +770,13 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 			this.newGame();
 		}
 		if(Widgets.button(this.ui,10,30,"TeamA")) {
-			this.teamA.push(new game_units_Being(this,1,0,null,this.teamB));
+			this.teamA.push(new game_units_Being(this,2,0,null,this.teamB));
 		}
 		if(Widgets.button(this.ui,237,30,"TeamB")) {
-			this.teamB.push(new game_units_Being(this,1,0,-1,this.teamA));
+			this.teamB.push(new game_units_Being(this,2,0,-1,this.teamA));
 		}
 		this.ui.end();
 		g.end();
-	}
-	,removeBeing: function(hero,being) {
-		if(hero == false) {
-			HxOverrides.remove(this.teamB,being);
-		} else {
-			HxOverrides.remove(this.teamA,being);
-		}
 	}
 	,__class__: game_Game
 });
@@ -885,6 +784,9 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 	if(direction == null) {
 		direction = 1;
 	}
+	this.lockedTurretTime = 0;
+	this.turretLvl = 0;
+	this.isTurret = false;
 	this.y = 0;
 	this.x = 0;
 	this.timeToAttack = false;
@@ -894,21 +796,28 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 	this.direction = direction;
 	switch(type) {
 	case 0:
-		this.idleSprite = new draw_Sprite("saw",direction);
+		this.isTurret = true;
+		this.idleSprite = new draw_Sprite(kha_Assets.images.hermit,direction);
+		this.idleSprite.setFrames(0,1);
+		this.atkSprite = this.idleSprite;
+		this.setRects(2,20,-5,35);
+		this.params = { hp : 120, damage : 0.1, periodicAttack : 0, speed : 0};
+		break;
+	case 1:
+		this.isTurret = true;
+		this.idleSprite = new draw_Sprite(kha_Assets.images.saw,direction);
 		this.idleSprite.setFrames(4,4);
 		this.atkSprite = this.idleSprite;
 		this.setRects(0,16,12,10);
-		this.params = { hp : 40, damage : 0.1, periodicAttack : 0, speed : 0};
-		this.maxHp = this.params.hp;
+		this.params = { hp : 10, damage : 0.5, periodicAttack : 0, speed : 0};
 		break;
-	case 1:
-		this.idleSprite = new draw_Sprite("hammer",direction);
+	case 2:
+		this.idleSprite = new draw_Sprite(kha_Assets.images.hammer,direction);
 		this.idleSprite.setFrames(10,4);
-		this.atkSprite = new draw_Sprite("hammerAtk",direction,7,0);
+		this.atkSprite = new draw_Sprite(kha_Assets.images.hammerAtk,direction,7,0);
 		this.atkSprite.setFrames(12,4);
 		this.setRects(8,5,13,5);
-		this.params = { hp : 10, damage : 1, periodicAttack : 11, speed : 0.3};
-		this.maxHp = this.params.hp;
+		this.params = { hp : 10, damage : 1.5, periodicAttack : 11, speed : 0.3};
 		break;
 	}
 	if(direction == 1) {
@@ -917,6 +826,9 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 		this.x = 267 - x;
 	}
 	this.y = 100;
+	this.lockedTurretTime = 0;
+	this.maxHp = this.params.hp;
+	this.bodyRectX = this.bodyRect.x;
 };
 $hxClasses["game.units.Being"] = game_units_Being;
 game_units_Being.__name__ = true;
@@ -932,9 +844,13 @@ game_units_Being.prototype = {
 	,isAttack: null
 	,lastIsAttack: null
 	,timeToAttack: null
-	,maxHp: null
 	,x: null
 	,y: null
+	,isTurret: null
+	,turretLvl: null
+	,lockedTurretTime: null
+	,maxHp: null
+	,bodyRectX: null
 	,setRects: function(bx,bw,ax,aw) {
 		if(this.direction == 1) {
 			this.bodyRect = { x : bx, w : bw};
@@ -951,6 +867,15 @@ game_units_Being.prototype = {
 		return false;
 	}
 	,onUpdate: function() {
+		if(this.lockedTurretTime > 0) {
+			this.lockedTurretTime--;
+			if(this.lockedTurretTime == 0) {
+				this.params.hp = this.maxHp;
+				this.bodyRect.x = this.bodyRectX;
+			} else {
+				return;
+			}
+		}
 		this.isAttack = false;
 		var _g = 0;
 		var _g1 = this.enemies;
@@ -962,13 +887,8 @@ game_units_Being.prototype = {
 				if(this.params.periodicAttack > 0 && this.timeToAttack == false) {
 					continue;
 				}
-				haxe_Log.trace("isAttack",{ fileName : "game/units/Being.hx", lineNumber : 101, className : "game.units.Being", methodName : "onUpdate"});
 				if(enemy.hurt(this.params.damage)) {
-					if(this.direction == 1) {
-						this.game.removeBeing(false,enemy);
-					} else {
-						this.game.removeBeing(true,enemy);
-					}
+					enemy.onDestroy();
 				}
 			}
 		}
@@ -992,19 +912,41 @@ game_units_Being.prototype = {
 	}
 	,onRender: function(g) {
 		var x0 = (this.x * this.game.scale | 0) / this.game.scale;
+		var drawX;
 		if(this.isAttack == false) {
 			this.idleSprite.onRender(g,x0,this.y);
+			drawX = this.idleSprite.drawX;
 		} else {
 			this.atkSprite.onRender(g,x0,this.y);
+			drawX = this.atkSprite.drawX;
 		}
-		g.drawString("" + (this.params.hp | 0),x0,this.y - 50);
+		var barW = 14 / this.maxHp * this.params.hp;
+		khm_utils_Atlas.drawScaledImage(g,kha_Assets.images.hp,drawX,this.y - 19 - barW,1,barW);
 	}
 	,hurt: function(delta) {
 		this.params.hp -= delta;
 		if(this.params.hp <= 0) {
+			this.params.hp = 0;
 			return true;
 		}
 		return false;
+	}
+	,onDestroy: function() {
+		if(!this.isTurret) {
+			if(this.direction == 1) {
+				this.game.queueForRemoveA.push(this);
+			} else {
+				this.game.queueForRemoveB.push(this);
+			}
+		} else {
+			if(this.turretLvl < 5) {
+				this.maxHp *= 1.3797;
+				this.params.damage -= this.params.damage / 5;
+				this.turretLvl++;
+			}
+			this.lockedTurretTime = 600;
+			this.bodyRect.x = -this.direction * 1000;
+		}
 	}
 	,__class__: game_units_Being
 };
@@ -2122,22 +2064,53 @@ js_html__$ArrayBuffer_ArrayBufferCompat.sliceImpl = function(begin,end) {
 	return resultArray.buffer;
 };
 var kha__$Assets_ImageList = function() {
-	this.names = ["hammer","hammerAtk","saw"];
+	this.names = ["atk","hammer","hammerAtk","hermit","hp","saw"];
 	this.sawDescription = { name : "saw", original_height : 17, original_width : 96, files : ["saw.png"], type : "image"};
 	this.sawName = "saw";
 	this.saw = null;
+	this.hpDescription = { name : "hp", original_height : 1, original_width : 1, files : ["hp.png"], type : "image"};
+	this.hpName = "hp";
+	this.hp = null;
+	this.hermitDescription = { name : "hermit", original_height : 19, original_width : 23, files : ["hermit.png"], type : "image"};
+	this.hermitName = "hermit";
+	this.hermit = null;
 	this.hammerAtkDescription = { name : "hammerAtk", original_height : 22, original_width : 64, files : ["hammerAtk.png"], type : "image"};
 	this.hammerAtkName = "hammerAtk";
 	this.hammerAtk = null;
 	this.hammerDescription = { name : "hammer", original_height : 13, original_width : 60, files : ["hammer.png"], type : "image"};
 	this.hammerName = "hammer";
 	this.hammer = null;
+	this.atkDescription = { name : "atk", original_height : 1, original_width : 1, files : ["atk.png"], type : "image"};
+	this.atkName = "atk";
+	this.atk = null;
 };
 $hxClasses["kha._Assets.ImageList"] = kha__$Assets_ImageList;
 kha__$Assets_ImageList.__name__ = true;
 kha__$Assets_ImageList.prototype = {
 	get: function(name) {
 		return Reflect.field(this,name);
+	}
+	,atk: null
+	,atkName: null
+	,atkDescription: null
+	,atkLoad: function(done,failure) {
+		var tmp;
+		if(failure != null) {
+			tmp = failure;
+		} else {
+			var f = haxe_Log.trace;
+			var infos = { fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "atkLoad"};
+			tmp = function(v) {
+				f(v,infos);
+			};
+		}
+		kha_Assets.loadImage("atk",function(image) {
+			done();
+		},tmp,{ fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "atkLoad"});
+	}
+	,atkUnload: function() {
+		this.atk.unload();
+		this.atk = null;
 	}
 	,hammer: null
 	,hammerName: null
@@ -2182,6 +2155,50 @@ kha__$Assets_ImageList.prototype = {
 	,hammerAtkUnload: function() {
 		this.hammerAtk.unload();
 		this.hammerAtk = null;
+	}
+	,hermit: null
+	,hermitName: null
+	,hermitDescription: null
+	,hermitLoad: function(done,failure) {
+		var tmp;
+		if(failure != null) {
+			tmp = failure;
+		} else {
+			var f = haxe_Log.trace;
+			var infos = { fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "hermitLoad"};
+			tmp = function(v) {
+				f(v,infos);
+			};
+		}
+		kha_Assets.loadImage("hermit",function(image) {
+			done();
+		},tmp,{ fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "hermitLoad"});
+	}
+	,hermitUnload: function() {
+		this.hermit.unload();
+		this.hermit = null;
+	}
+	,hp: null
+	,hpName: null
+	,hpDescription: null
+	,hpLoad: function(done,failure) {
+		var tmp;
+		if(failure != null) {
+			tmp = failure;
+		} else {
+			var f = haxe_Log.trace;
+			var infos = { fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "hpLoad"};
+			tmp = function(v) {
+				f(v,infos);
+			};
+		}
+		kha_Assets.loadImage("hp",function(image) {
+			done();
+		},tmp,{ fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 132, className : "kha._Assets.ImageList", methodName : "hpLoad"});
+	}
+	,hpUnload: function() {
+		this.hp.unload();
+		this.hp = null;
 	}
 	,saw: null
 	,sawName: null
@@ -15187,6 +15204,119 @@ var khm_imgui_WidgetState = $hxEnums["khm.imgui.WidgetState"] = { __ename__ : tr
 	,Focus: {_hx_index:2,__enum__:"khm.imgui.WidgetState",toString:$estr}
 	,Active: {_hx_index:3,__enum__:"khm.imgui.WidgetState",toString:$estr}
 };
+var khm_utils_Atlas = function() { };
+$hxClasses["khm.utils.Atlas"] = khm_utils_Atlas;
+khm_utils_Atlas.__name__ = true;
+khm_utils_Atlas.init = function(imgFilter,x,y) {
+	if(y == null) {
+		y = 0;
+	}
+	if(x == null) {
+		x = 0;
+	}
+	khm_utils_Atlas.initImagesMap(imgFilter);
+	khm_utils_Atlas.keys.sort(function(a,b) {
+		var img = kha_Assets.images.get(a);
+		var img2 = kha_Assets.images.get(b);
+		var size = img.get_height();
+		var size2 = img2.get_height();
+		if(size > size2) {
+			return -1;
+		} else if(size < size2) {
+			return 1;
+		}
+		return 0;
+	});
+	var _g = new haxe_ds_ObjectMap();
+	var _g1 = 0;
+	var _g2 = khm_utils_Atlas.keys.length;
+	while(_g1 < _g2) {
+		var i = _g1++;
+		_g.set(kha_Assets.images.get(khm_utils_Atlas.keys[i]),i);
+	}
+	khm_utils_Atlas.map = _g;
+	khm_utils_Atlas.offsX = [];
+	khm_utils_Atlas.offsY = [];
+	khm_utils_Atlas.sizesW = [];
+	khm_utils_Atlas.sizesH = [];
+	khm_utils_Atlas.atlas = kha_Image.createRenderTarget(khm_utils_Atlas.maxSize,khm_utils_Atlas.maxSize);
+	var g = khm_utils_Atlas.atlas.get_g2();
+	var blockW = 0;
+	var blockY = 0;
+	var lineY = y;
+	var lineH = 0;
+	g.begin(true,0);
+	var _g3 = 0;
+	var _g4 = khm_utils_Atlas.keys.length;
+	while(_g3 < _g4) {
+		var i1 = _g3++;
+		var img1 = kha_Assets.images.get(khm_utils_Atlas.keys[i1]);
+		g.drawImage(img1,x,y);
+		khm_utils_Atlas.offsX.push(x);
+		khm_utils_Atlas.offsY.push(y);
+		khm_utils_Atlas.sizesW.push(img1.get_width());
+		khm_utils_Atlas.sizesH.push(img1.get_height());
+		if(i1 == khm_utils_Atlas.keys.length - 1) {
+			break;
+		}
+		var next = kha_Assets.images.get(khm_utils_Atlas.keys[i1 + 1]);
+		if(lineH < img1.get_height()) {
+			lineH = img1.get_height();
+		}
+		if(blockW < img1.get_width()) {
+			blockW = img1.get_width();
+		}
+		blockY += img1.get_height() + 1;
+		if(blockY + next.get_height() < lineH) {
+			y = lineY + blockY;
+			if(blockW < next.get_width()) {
+				blockW = next.get_width();
+			}
+		} else {
+			x += blockW + 1;
+			y = lineY;
+			blockW = next.get_width();
+			blockY = 0;
+		}
+		if(x + next.get_width() >= khm_utils_Atlas.maxSize) {
+			lineY += lineH + 1;
+			x = 0;
+			y = lineY;
+			blockW = next.get_width();
+			blockY = 0;
+			lineH = 0;
+		}
+	}
+	g.end();
+};
+khm_utils_Atlas.initImagesMap = function(imgFilter) {
+	khm_utils_Atlas.keys = [];
+	var fields = Reflect.fields(kha_Assets.images);
+	var _g = 0;
+	while(_g < fields.length) {
+		var field = fields[_g];
+		++_g;
+		if(new EReg("(Name|Description|names)$","").match(field)) {
+			continue;
+		}
+		if(imgFilter != null && !imgFilter(field)) {
+			continue;
+		}
+		khm_utils_Atlas.keys.push(field);
+	}
+};
+khm_utils_Atlas.drawSubImage = function(g,img,x,y,sx,sy,sw,sh) {
+	var id = khm_utils_Atlas.map.h[img.__id__];
+	g.drawSubImage(khm_utils_Atlas.atlas,x,y,khm_utils_Atlas.offsX[id] + sx,khm_utils_Atlas.offsY[id] + sy,sw,sh);
+};
+khm_utils_Atlas.drawScaledImage = function(g,img,x,y,w,h) {
+	var id = khm_utils_Atlas.map.h[img.__id__];
+	g.drawScaledSubImage(khm_utils_Atlas.atlas,khm_utils_Atlas.offsX[id],khm_utils_Atlas.offsY[id],khm_utils_Atlas.sizesW[id],khm_utils_Atlas.sizesH[id],x,y,w,h);
+};
+khm_utils_Atlas.drawScaledSubImage = function(g,img,sx,sy,sw,sh,x,y,w,h) {
+	var id = khm_utils_Atlas.map.h[img.__id__];
+	g.drawScaledSubImage(khm_utils_Atlas.atlas,sx + khm_utils_Atlas.offsX[id],sy + khm_utils_Atlas.offsY[id],sw,sh,x,y,w,h);
+};
 var $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = m.bind(o); o.hx__closures__[m.__id__] = f; } return f; }
 $hxClasses["Math"] = Math;
@@ -15222,7 +15352,6 @@ Widgets.activeColor = -1408480;
 Widgets.focusColor = -2145352982;
 Widgets.buttonW = 70;
 Widgets.buttonH = 40;
-draw_Atlas.maxSize = 2048;
 haxe_Unserializer.DEFAULT_RESOLVER = new haxe__$Unserializer_DefaultResolver();
 haxe_Unserializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
 haxe_io_FPHelper.helper = new DataView(new ArrayBuffer(8));
@@ -15319,5 +15448,6 @@ kha_internal_HdrFormat.widthHeightPattern = new EReg("-Y ([0-9]+) \\+X ([0-9]+)"
 kha_js_AEAudioChannel.todo = [];
 kha_js_Sound.loading = [];
 kha_netsync_ControllerBuilder.nextId = 0;
+khm_utils_Atlas.maxSize = 2048;
 Main.main();
 })(typeof exports != "undefined" ? exports : typeof window != "undefined" ? window : typeof self != "undefined" ? self : this, typeof window != "undefined" ? window : typeof global != "undefined" ? global : typeof self != "undefined" ? self : this);
