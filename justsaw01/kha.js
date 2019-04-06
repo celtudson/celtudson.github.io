@@ -784,6 +784,7 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 	if(direction == null) {
 		direction = 1;
 	}
+	this.lockedTurretTimeMax = 0;
 	this.lockedTurretTime = 0;
 	this.turretLvl = 0;
 	this.isTurret = false;
@@ -801,7 +802,7 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 		this.idleSprite.setFrames(0,1);
 		this.atkSprite = this.idleSprite;
 		this.setRects(2,20,-5,35);
-		this.params = { hp : 120, damage : 0.1, periodicAttack : 0, speed : 0};
+		this.params = { type : 0, hp : 120, damage : 0.1, periodicAttack : 0, speed : 0};
 		break;
 	case 1:
 		this.isTurret = true;
@@ -809,7 +810,7 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 		this.idleSprite.setFrames(4,4);
 		this.atkSprite = this.idleSprite;
 		this.setRects(0,16,12,10);
-		this.params = { hp : 10, damage : 0.5, periodicAttack : 0, speed : 0};
+		this.params = { type : 1, hp : 10, damage : 0.4, periodicAttack : 0, speed : 0};
 		break;
 	case 2:
 		this.idleSprite = new draw_Sprite(kha_Assets.images.hammer,direction);
@@ -817,7 +818,7 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 		this.atkSprite = new draw_Sprite(kha_Assets.images.hammerAtk,direction,7,0);
 		this.atkSprite.setFrames(12,4);
 		this.setRects(8,5,13,5);
-		this.params = { hp : 10, damage : 1.5, periodicAttack : 11, speed : 0.3};
+		this.params = { type : 2, hp : 10, damage : 1.5, periodicAttack : 11, speed : 0.3};
 		break;
 	}
 	if(direction == 1) {
@@ -827,7 +828,7 @@ var game_units_Being = function(g,type,x,direction,enemyTeam) {
 	}
 	this.y = 100;
 	this.lockedTurretTime = 0;
-	this.maxHp = this.params.hp;
+	this.hpMax = this.params.hp;
 	this.bodyRectX = this.bodyRect.x;
 };
 $hxClasses["game.units.Being"] = game_units_Being;
@@ -849,7 +850,8 @@ game_units_Being.prototype = {
 	,isTurret: null
 	,turretLvl: null
 	,lockedTurretTime: null
-	,maxHp: null
+	,lockedTurretTimeMax: null
+	,hpMax: null
 	,bodyRectX: null
 	,setRects: function(bx,bw,ax,aw) {
 		if(this.direction == 1) {
@@ -870,7 +872,7 @@ game_units_Being.prototype = {
 		if(this.lockedTurretTime > 0) {
 			this.lockedTurretTime--;
 			if(this.lockedTurretTime == 0) {
-				this.params.hp = this.maxHp;
+				this.params.hp = this.hpMax;
 				this.bodyRect.x = this.bodyRectX;
 			} else {
 				return;
@@ -920,8 +922,22 @@ game_units_Being.prototype = {
 			this.atkSprite.onRender(g,x0,this.y);
 			drawX = this.atkSprite.drawX;
 		}
-		var barW = 14 / this.maxHp * this.params.hp;
+		var barW = 14 / this.hpMax * this.params.hp;
 		khm_utils_Atlas.drawScaledImage(g,kha_Assets.images.hp,drawX,this.y - 19 - barW,1,barW);
+		if(!this.isTurret) {
+			return;
+		}
+		var _g = 0;
+		var _g1 = this.turretLvl;
+		while(_g < _g1) {
+			var ix = _g++;
+			khm_utils_Atlas.drawScaledImage(g,kha_Assets.images.atk,drawX - 6 + ix * 3,this.y + 2,1,1);
+		}
+		if(this.lockedTurretTime > 0) {
+			var bar2W = 13 / this.lockedTurretTimeMax * this.lockedTurretTime;
+			khm_utils_Atlas.drawScaledImage(g,kha_Assets.images.atk,drawX - 6,this.y + 4,13,1);
+			khm_utils_Atlas.drawScaledImage(g,kha_Assets.images.hp,drawX - 6,this.y + 4,13 - bar2W,1);
+		}
 	}
 	,hurt: function(delta) {
 		this.params.hp -= delta;
@@ -939,12 +955,26 @@ game_units_Being.prototype = {
 				this.game.queueForRemoveB.push(this);
 			}
 		} else {
-			if(this.turretLvl < 5) {
-				this.maxHp *= 1.3797;
-				this.params.damage -= this.params.damage / 5;
-				this.turretLvl++;
+			switch(this.params.type) {
+			case 0:
+				this.isTurret = false;
+				this.onDestroy();
+				break;
+			case 1:
+				if(this.turretLvl < 5) {
+					this.hpMax *= 1.3797;
+					this.params.damage -= this.params.damage / 5;
+					this.turretLvl++;
+					this.lockedTurretTime = 600;
+					haxe_Log.trace("update: " + this.turretLvl + ", maxHp: " + this.hpMax + ", damage: " + this.params.damage,{ fileName : "game/units/Being.hx", lineNumber : 212, className : "game.units.Being", methodName : "onDestroy"});
+				} else {
+					this.isTurret = false;
+					this.onDestroy();
+				}
+				break;
+			default:
 			}
-			this.lockedTurretTime = 600;
+			this.lockedTurretTimeMax = this.lockedTurretTime;
 			this.bodyRect.x = -this.direction * 1000;
 		}
 	}
