@@ -379,7 +379,7 @@ var Main = function() { };
 $hxClasses["Main"] = Main;
 Main.__name__ = true;
 Main.main = function() {
-	kha_System.start(new kha_SystemOptions("ViktorDS",800,480,null,null),function(_) {
+	kha_System.start(new kha_SystemOptions("textDS",800,480,null,null),function(_) {
 		window.document.documentElement.style.padding = "0";
 		window.document.documentElement.style.margin = "0";
 		window.document.body.style.padding = "0";
