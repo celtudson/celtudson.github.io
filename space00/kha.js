@@ -521,7 +521,7 @@ game_Cosmos.onRender = function(g) {
 	while(_g < _g1.length) {
 		var p = _g1[_g];
 		++_g;
-		kha_graphics2_GraphicsExtension.fillCircle(g,p.x,p.y,p.radius,32);
+		kha_graphics2_GraphicsExtension.drawCircle(g,p.x,p.y,p.radius,1,32);
 	}
 	game_Cosmos.hero.onRender(g);
 	g.set_color(-1);
@@ -9262,34 +9262,6 @@ kha_graphics2_GraphicsExtension.drawCircle = function(g2,cx,cy,radius,strength,s
 		g2.drawLine(px,py,x + cx,y + cy,strength);
 	}
 };
-kha_graphics2_GraphicsExtension.fillCircle = function(g2,cx,cy,radius,segments) {
-	if(segments == null) {
-		segments = 0;
-	}
-	if(kha_SystemImpl.gl == null) {
-		g2.fillCircle(cx,cy,radius);
-		return;
-	}
-	if(segments <= 0) {
-		segments = Math.floor(10 * Math.sqrt(radius));
-	}
-	var theta = 2 * Math.PI / segments;
-	var c = Math.cos(theta);
-	var s = Math.sin(theta);
-	var x = radius;
-	var y = 0.0;
-	var _g = 0;
-	var _g1 = segments;
-	while(_g < _g1) {
-		++_g;
-		var px = x + cx;
-		var py = y + cy;
-		var t = x;
-		x = c * x - s * y;
-		y = c * y + s * t;
-		g2.fillTriangle(px,py,x + cx,y + cy,cx,cy);
-	}
-};
 var kha_graphics2_ImageScaleQuality = $hxEnums["kha.graphics2.ImageScaleQuality"] = { __ename__ : true, __constructs__ : ["Low","High"]
 	,Low: {_hx_index:0,__enum__:"kha.graphics2.ImageScaleQuality",toString:$estr}
 	,High: {_hx_index:1,__enum__:"kha.graphics2.ImageScaleQuality",toString:$estr}
@@ -12638,11 +12610,6 @@ kha_js_CanvasGraphics.prototype = $extend(kha_graphics2_Graphics.prototype,{
 		this.canvas.arc(cx,cy,radius,0,eAngle,false);
 		this.canvas.stroke();
 		this.canvas.lineWidth = oldStrength;
-	}
-	,fillCircle: function(cx,cy,radius) {
-		this.canvas.beginPath();
-		this.canvas.arc(cx,cy,radius,0,2 * Math.PI,false);
-		this.canvas.fill();
 	}
 	,bakedQuadCache: null
 	,drawString: function(text,x,y) {
