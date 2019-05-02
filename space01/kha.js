@@ -2090,16 +2090,16 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		}
 	}
 	,onUpdate: function() {
-		if(this.keys.h[65]) {
+		if(this.keys.h[65] || this.keys.h[37]) {
 			game_Game.hero.setAngle(0.001);
 		}
-		if(this.keys.h[68]) {
+		if(this.keys.h[68] || this.keys.h[39]) {
 			game_Game.hero.setAngle(-0.001);
 		}
-		if(this.keys.h[83]) {
+		if(this.keys.h[83] || this.keys.h[40]) {
 			game_Game.hero.setSpeed(-0.01);
 		}
-		if(this.keys.h[87]) {
+		if(this.keys.h[87] || this.keys.h[38]) {
 			game_Game.hero.setSpeed(0.02);
 		}
 		game_Cosmos.onUpdate();
