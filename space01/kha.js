@@ -511,7 +511,8 @@ game_Cosmos.reset = function() {
 	game_Game.hero = game_Cosmos.hero;
 	game_Cosmos.ships.length = 0;
 	game_Cosmos.planets.length = 0;
-	game_Cosmos.planets.push({ x : 400, y : 240, radius : 38.4, gStr : 0.9});
+	game_Cosmos.planets.push({ x : 400, y : 240, radius : 96, gStr : 1.9});
+	game_Cosmos.planets.push({ x : 0, y : 0, radius : 38.4, gStr : 0.9});
 };
 game_Cosmos.onUpdate = function() {
 	game_Cosmos.hero.onUpdate(game_Cosmos.planets);
@@ -2125,7 +2126,7 @@ var game_Ship = function(x,y) {
 	this.speedY = 0;
 	this.speedX = 0;
 	this.angleTweak = 0;
-	this.angle = 0.1;
+	this.angle = 0;
 	this.x = x;
 	this.y = y;
 	this.maxFuel = 16;
@@ -2197,16 +2198,18 @@ game_Ship.prototype = {
 			var _vectX = this.x - p.x;
 			var _vectY = this.y - p.y;
 			var _dist = Math.sqrt(_vectX * _vectX + _vectY * _vectY);
+			var _gAngle = Math.atan2(_vectY,_vectX);
 			if(_dist > p.radius) {
 				var _gStr = p.gStr * 100;
-				var _gAngle = Math.atan2(_vectY,_vectX);
 				_gVectorX += Math.cos(_gAngle) / _dist * _gStr;
 				_gVectorY += Math.sin(_gAngle) / _dist * _gStr;
 			} else {
-				this.x = p.x + _vectX;
-				this.y = p.y + _vectY;
-				this.speedX = 0;
-				this.speedY = 0;
+				var cos = Math.cos(_gAngle);
+				var sin = Math.sin(_gAngle);
+				this.x = p.x + cos * p.radius;
+				this.y = p.y + sin * p.radius;
+				this.speedX += cos;
+				this.speedY += sin;
 			}
 		}
 		this.speedX -= _gVectorX / 60;
@@ -2217,6 +2220,7 @@ game_Ship.prototype = {
 		if(this.exhaustRespawn == 0) {
 			this.exhaustRespawn = 10;
 			this.exhaust.push({ x : this.x - Math.cos(-this.angle) * 16, y : this.y - Math.sin(-this.angle) * 16});
+			this.exhaust.shift();
 		} else {
 			this.exhaustRespawn--;
 		}
