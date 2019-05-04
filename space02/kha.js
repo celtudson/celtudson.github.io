@@ -509,6 +509,7 @@ game_Cosmos.__name__ = true;
 game_Cosmos.reset = function() {
 	game_Cosmos.hero = new game_Ship(160,60);
 	game_Game.hero = game_Cosmos.hero;
+	game_Info.close();
 	game_Cosmos.ships.length = 0;
 	game_Cosmos.planets.length = 0;
 	game_Cosmos.planets.push({ x : 400, y : 240, radius : 96, gStr : 1.9});
@@ -2115,11 +2116,40 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		g.set_fontSize(20);
 		game_Game.ui.begin(g);
 		game_Cosmos.onRender(g);
+		game_Info.onRender(g);
 		game_Game.ui.end();
 		g.end();
 	}
 	,__class__: game_Game
 });
+var game_Info = function() { };
+$hxClasses["game.Info"] = game_Info;
+game_Info.__name__ = true;
+game_Info.close = function() {
+	game_Info.isOpen = false;
+};
+game_Info.show = function(p) {
+	if(!game_Info.isOpen) {
+		game_Info.isOpen = true;
+		game_Info.planet = p;
+		if(p.name == null) {
+			p.name = "без имени";
+		}
+	}
+	return game_Info.isOpen;
+};
+game_Info.onRender = function(g) {
+	if(!game_Info.isOpen) {
+		return;
+	}
+	g.set_color(-822083584);
+	g.fillRect(game_Info.x - 12,game_Info.y - 4,200,100);
+	g.set_color(-1);
+	g.drawString("Имя: " + game_Info.planet.name,game_Info.x,game_Info.y);
+	g.drawString("Коорд.: " + game_Info.planet.x + "x" + game_Info.planet.y,game_Info.x,game_Info.y + 24);
+	g.drawString("Радиус: " + game_Info.planet.radius,game_Info.x,game_Info.y + 48);
+	g.drawString("Сила g: " + game_Info.planet.gStr,game_Info.x,game_Info.y + 72);
+};
 var game_Ship = function(x,y) {
 	this.exhaustRespawn = 0;
 	this.exhaust = [];
@@ -2178,6 +2208,7 @@ game_Ship.prototype = {
 		this.speedY += Math.sin(-this.angle) * delta;
 		this.fuel -= Math.abs(delta);
 		this.friction = 1;
+		game_Info.close();
 	}
 	,onUpdate: function(planets) {
 		if(this.angleTweak < 0.001 && this.angleTweak > -0.001) {
@@ -2214,9 +2245,10 @@ game_Ship.prototype = {
 				this.y = p.y + sin * p.radius;
 				this.speedX = (this.speedX + cos) * this.friction;
 				this.speedY = (this.speedY + sin) * this.friction;
-				this.friction -= 0.25;
+				this.friction -= 0.24;
 				if(this.friction < 0) {
 					this.friction = 0;
+					game_Info.show(p);
 				}
 			}
 		}
@@ -13661,6 +13693,9 @@ kha_System.shutdownListeners = [];
 game_Game.camX = 0;
 game_Game.camY = 0;
 game_Game.ui = new khm_imgui_Imgui(new khm_imgui_ImguiSets(false,null,null));
+game_Info.isOpen = false;
+game_Info.x = 600;
+game_Info.y = 100;
 haxe_Unserializer.DEFAULT_RESOLVER = new haxe__$Unserializer_DefaultResolver();
 haxe_Unserializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
 haxe_io_FPHelper.helper = new DataView(new ArrayBuffer(8));
