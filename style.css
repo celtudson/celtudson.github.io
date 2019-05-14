@@ -23,6 +23,7 @@ ul {
 a {
 	color: #87CEEB;
 	text-decoration: none;
+	font-style: italic;
 }
 
 a:hover {
@@ -43,6 +44,7 @@ a:hover {
 #head-menu a {
 	display: block;
 	color: #F5F5F5;
+	font-style: normal;
 }
 
 #head-menu a:hover {
