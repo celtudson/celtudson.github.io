@@ -563,42 +563,6 @@ _$UInt_UInt_$Impl_$.toFloat = function(this1) {
 var Widgets = function() { };
 $hxClasses["Widgets"] = Widgets;
 Widgets.__name__ = true;
-Widgets.button = function(ui,x,y,text) {
-	if(text == null) {
-		text = "";
-	}
-	var id = ++ui.id;
-	var w = Widgets.buttonW;
-	var h = Widgets.buttonH;
-	var rect_id = id;
-	var rect_x = x;
-	var rect_y = y;
-	var rect_w = w;
-	var rect_h = h;
-	var rect_group = 0;
-	ui.addWidgetData(id,x,y,w,h,0);
-	var _this = ui.frame;
-	var i = (ui.frame.arr.length / 6 | 0) - 1;
-	i *= 6;
-	rect_id = _this.arr[i];
-	rect_x = _this.arr[i + 1];
-	rect_y = _this.arr[i + 2];
-	rect_w = _this.arr[i + 3];
-	rect_h = _this.arr[i + 4];
-	rect_group = _this.arr[i + 5];
-	var p = ui.isInside(rect_id,rect_x,rect_y,rect_w,rect_h);
-	if(p != null) {
-		if(!ui.isWidgetGroupExists(rect_group)) {
-			var id1 = p.id;
-			ui.widgetGroups[id1] = rect_group;
-			ui.hoverIds[id1] = rect_id;
-			if(ui.activeIds[id1] == 0 && ui.pointersDown[id1]) {
-				ui.activeIds[id1] = rect_id;
-			}
-		}
-	}
-	return ui.isWidgetClicked(id);
-};
 var khm_imgui_ImguiSets = function(autoNotifyInput,redrawOnEvents,debug) {
 	this.debug = false;
 	this.redrawOnEvents = false;
@@ -624,8 +588,6 @@ khm_imgui_ImguiSets.prototype = {
 var khm_imgui_Imgui = function(sets) {
 	this.blockKeyPress = false;
 	this.id = 0;
-	this.scissorEnabled = false;
-	this.scissorRect = new khm_imgui_WidgetRect(0,0,0,0,0);
 	this.frame = new khm_imgui_Frame();
 	this.lastFrame = new khm_imgui_Frame();
 	this.keys = new haxe_ds_IntMap();
@@ -760,8 +722,6 @@ khm_imgui_Imgui.prototype = {
 	,keys: null
 	,lastFrame: null
 	,frame: null
-	,scissorRect: null
-	,scissorEnabled: null
 	,id: null
 	,blockKeyPress: null
 	,onPointerDown: function(p) {
@@ -1050,50 +1010,6 @@ khm_imgui_Imgui.prototype = {
 		_this5._12 = temp__12;
 		_this5._22 = temp__22;
 	}
-	,addWidgetData: function(id,x,y,w,h,group) {
-		if(this.scissorEnabled) {
-			var s = this.scissorRect;
-			var difX = s.x - x;
-			var difY = s.y - y;
-			if(difX > 0) {
-				x += difX;
-				w -= difX;
-			}
-			if(difY > 0) {
-				y += difY;
-				h -= difY;
-			}
-			var difX1 = w + x - s.w - s.x;
-			var difY1 = h + y - s.h - s.y;
-			if(difX1 > 0) {
-				w -= difX1;
-			}
-			if(difY1 > 0) {
-				h -= difY1;
-			}
-			if(w < 0) {
-				w = 0;
-			}
-			if(h < 0) {
-				h = 0;
-			}
-		}
-		var _this = this.g;
-		var scaleX = _this.transformations[_this.transformations.length - 1]._00;
-		var _this1 = this.g;
-		var scaleY = _this1.transformations[_this1.transformations.length - 1]._11;
-		x = x * scaleX | 0;
-		y = y * scaleY | 0;
-		w = w * scaleX | 0;
-		h = h * scaleY | 0;
-		var _this2 = this.frame;
-		_this2.arr.push(id);
-		_this2.arr.push(x);
-		_this2.arr.push(y);
-		_this2.arr.push(w);
-		_this2.arr.push(h);
-		_this2.arr.push(group);
-	}
 	,isWidgetGroupExists: function(group) {
 		if(group != 0) {
 			var _g = 0;
@@ -1144,29 +1060,6 @@ khm_imgui_Imgui.prototype = {
 		var _g = 0;
 		var _g1 = this.activeIds;
 		while(_g < _g1.length) if(_g1[_g++] > 0) {
-			return true;
-		}
-		return false;
-	}
-	,isWidgetClicked: function(id) {
-		var _g = 0;
-		var _g1 = this.pointers;
-		while(_g < _g1.length) {
-			var p = _g1[_g];
-			++_g;
-			if(this.activeIds[p.id] != id) {
-				continue;
-			}
-			if(this.pointersDown[p.id]) {
-				continue;
-			}
-			if(!p.isTouch) {
-				if(this.hoverIds[p.id] != id && this.focusId != id) {
-					continue;
-				}
-			} else if(this.lastHoverIds[p.id] != id) {
-				continue;
-			}
 			return true;
 		}
 		return false;
@@ -2355,6 +2248,7 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 		if(game_Game.ui.onPointerUp(p)) {
 			return;
 		}
+		game_Road.setRoad(p.x,p.y);
 	}
 	,onMouseMove: function(p) {
 		if(game_Game.ui.onPointerMove(p)) {
@@ -2528,9 +2422,6 @@ game_Road.onRender = function(g) {
 		var _g11 = game_Road.w;
 		while(_g2 < _g11) {
 			var ix = _g2++;
-			if(Widgets.button(game_Game.ui,game_Road.camX + ix * 16,game_Road.camY + iy * 16,"")) {
-				game_Road.setRoad(ix,iy);
-			}
 			var used = game_Road.usedMap[iy][ix];
 			if(used == 0) {
 				g.set_color(-1);
@@ -2609,7 +2500,14 @@ game_Road.getUsing = function(xx,yy) {
 	}
 	return result;
 };
-game_Road.setRoad = function(x,y) {
+game_Road.setRoad = function(mouseX,mouseY) {
+	var mX = mouseX - game_Road.camX;
+	var mY = mouseY - game_Road.camY;
+	if(mX < 0 || mY < 0 || mX >= game_Road.w * 16 || mY >= game_Road.h * 16) {
+		return;
+	}
+	var x = mX / 16 | 0;
+	var y = mY / 16 | 0;
 	if(game_Road.map[y][x] == 0) {
 		if(game_Road.usedTiles >= game_Road.maxTiles) {
 			return;
@@ -2620,17 +2518,17 @@ game_Road.setRoad = function(x,y) {
 		var u = isUsing[1] > -1 ? 0 : -1;
 		var r = isUsing[2] > -1 ? 0 : -1;
 		var d = isUsing[3] > -1 ? 0 : -1;
-		haxe_Log.trace(l,{ fileName : "game/Road.hx", lineNumber : 193, className : "game.Road", methodName : "setRoad", customParams : [u,r,d]});
+		haxe_Log.trace(l,{ fileName : "game/Road.hx", lineNumber : 194, className : "game.Road", methodName : "setRoad", customParams : [u,r,d]});
 		if(r == 0 && d == 0) {
 			game_Road.usedMap[y][x] = 2;
 			game_Road.map[y][x] = 1;
 			game_Road.tilemap.setTileId(0,x,y,game_Road.map[y][x] + 1);
-			if(game_Road.usedMap[y][x + 1] == 1) {
+			if(isUsing[2] == 0) {
 				var x1 = x + 1;
 				game_Road.map[y][x1] = 2;
 				game_Road.tilemap.setTileId(0,x1,y,game_Road.map[y][x1] + 1);
 			}
-			if(game_Road.usedMap[y + 1][x] == 1) {
+			if(isUsing[3] == 0) {
 				var y1 = y + 1;
 				game_Road.map[y1][x] = 6;
 				game_Road.tilemap.setTileId(0,x,y1,game_Road.map[y1][x] + 1);
@@ -2639,12 +2537,12 @@ game_Road.setRoad = function(x,y) {
 			game_Road.usedMap[y][x] = 2;
 			game_Road.map[y][x] = 3;
 			game_Road.tilemap.setTileId(0,x,y,game_Road.map[y][x] + 1);
-			if(game_Road.usedMap[y][x - 1] == 1) {
+			if(isUsing[0] == 0) {
 				var x2 = x - 1;
 				game_Road.map[y][x2] = 2;
 				game_Road.tilemap.setTileId(0,x2,y,game_Road.map[y][x2] + 1);
 			}
-			if(game_Road.usedMap[y + 1][x] == 1) {
+			if(isUsing[3] == 0) {
 				var y2 = y + 1;
 				game_Road.map[y2][x] = 6;
 				game_Road.tilemap.setTileId(0,x,y2,game_Road.map[y2][x] + 1);
@@ -2653,12 +2551,12 @@ game_Road.setRoad = function(x,y) {
 			game_Road.usedMap[y][x] = 2;
 			game_Road.map[y][x] = 5;
 			game_Road.tilemap.setTileId(0,x,y,game_Road.map[y][x] + 1);
-			if(game_Road.usedMap[y][x + 1] == 1) {
+			if(isUsing[2] == 0) {
 				var x3 = x + 1;
 				game_Road.map[y][x3] = 2;
 				game_Road.tilemap.setTileId(0,x3,y,game_Road.map[y][x3] + 1);
 			}
-			if(game_Road.usedMap[y - 1][x] == 1) {
+			if(isUsing[1] == 0) {
 				var y3 = y - 1;
 				game_Road.map[y3][x] = 6;
 				game_Road.tilemap.setTileId(0,x,y3,game_Road.map[y3][x] + 1);
@@ -2667,12 +2565,12 @@ game_Road.setRoad = function(x,y) {
 			game_Road.usedMap[y][x] = 2;
 			game_Road.map[y][x] = 7;
 			game_Road.tilemap.setTileId(0,x,y,game_Road.map[y][x] + 1);
-			if(game_Road.usedMap[y][x - 1] == 1) {
+			if(isUsing[0] == 0) {
 				var x4 = x - 1;
 				game_Road.map[y][x4] = 2;
 				game_Road.tilemap.setTileId(0,x4,y,game_Road.map[y][x4] + 1);
 			}
-			if(game_Road.usedMap[y - 1][x] == 1) {
+			if(isUsing[1] == 0) {
 				var y4 = y - 1;
 				game_Road.map[y4][x] = 6;
 				game_Road.tilemap.setTileId(0,x,y4,game_Road.map[y4][x] + 1);
@@ -14060,28 +13958,6 @@ khm_imgui_Frame.__name__ = true;
 khm_imgui_Frame.prototype = {
 	arr: null
 	,__class__: khm_imgui_Frame
-};
-var khm_imgui_WidgetRect = function(id,x,y,w,h,group) {
-	if(group == null) {
-		group = 0;
-	}
-	this.id = id;
-	this.x = x;
-	this.y = y;
-	this.w = w;
-	this.h = h;
-	this.group = group;
-};
-$hxClasses["khm.imgui.WidgetRect"] = khm_imgui_WidgetRect;
-khm_imgui_WidgetRect.__name__ = true;
-khm_imgui_WidgetRect.prototype = {
-	id: null
-	,x: null
-	,y: null
-	,w: null
-	,h: null
-	,group: null
-	,__class__: khm_imgui_WidgetRect
 };
 var khm_tilemap_Camera = function(tilemap) {
 	this.h = 0.0;
