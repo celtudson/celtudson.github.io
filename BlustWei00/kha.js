@@ -543,23 +543,24 @@ game_Field.onInit = function() {
 };
 game_Field.reset = function() {
 	var _g = 0;
-	var _g1 = game_Field.boardRow;
+	var _g1 = game_Field.boardRows;
 	while(_g < _g1) game_Field.map[_g++] = [];
-	game_Field.selAround();
+	game_Field.selX = 0;
+	game_Field.selY = 0;
 };
 game_Field.onRender = function(g) {
 	var _g = 0;
-	var _g1 = game_Field.boardRow;
+	var _g1 = game_Field.boardRows;
 	while(_g < _g1) {
 		var iy = _g++;
-		var _offX = 31;
-		var _col = game_Field.boardCol - 1;
+		var _offX = game_Field.triangleW;
+		var _cols = game_Field.boardCols - 1;
 		if(iy % 2 == 0) {
 			_offX = 0;
-			_col = game_Field.boardCol;
+			_cols = game_Field.boardCols;
 		}
 		var _g2 = 0;
-		var _g11 = _col;
+		var _g11 = _cols;
 		while(_g2 < _g11) {
 			var ix = _g2++;
 			g.set_color(-1);
@@ -568,71 +569,101 @@ game_Field.onRender = function(g) {
 			} else if(game_Field.map[iy][ix] == 1) {
 				g.set_color(-16711936);
 			}
-			g.drawImage(game_Field.hex,game_Field.boardX + _offX + ix * 62,game_Field.boardY + iy * 48);
+			g.drawImage(game_Field.hex,game_Field.boardX + _offX + ix * game_Field.cellW,game_Field.boardY + iy * game_Field.cellH);
 		}
 	}
 };
 game_Field.selToHex = function(cx,cy) {
 	cx -= game_Field.boardX;
 	cy -= game_Field.boardY;
-	var _dy = cy / 48 | 0;
-	cy -= _dy * 48;
-	if(cy >= 16) {
-		if(_dy % 2 == 0) {
-			if(cx < 0 || cx > game_Field.boardCol * 62 - 1) {
-				return;
+	var row = cy / game_Field.cellH | 0;
+	if(row % 2 == 1) {
+		cx -= game_Field.triangleW;
+	}
+	cy -= row * game_Field.cellH;
+	if(cy < game_Field.triangleH) {
+		var _col = cx / game_Field.triangleW | 0;
+		cx -= _col * game_Field.triangleW;
+		haxe_Log.trace(_col,{ fileName : "game/Field.hx", lineNumber : 66, className : "game.Field", methodName : "selToHex", customParams : [row,cx,cy]});
+		if(_col % 2 == 0) {
+			game_Field.selX = _col / 2 | 0;
+			if(cx / game_Field.triangleW + cy / game_Field.triangleH < 1) {
+				if(row > 0) {
+					if(row % 2 == 0) {
+						game_Field.selX--;
+					}
+					game_Field.selY = row - 1;
+				}
+			} else {
+				game_Field.selY = row;
 			}
 		} else {
-			cx -= 31;
-			if(cx < 0 || cx > (game_Field.boardCol - 1) * 62 - 1) {
-				return;
+			game_Field.selX = _col / 2 | 0;
+			if((31 - cx) / game_Field.triangleW + cy / game_Field.triangleH < 1) {
+				if(row > 0) {
+					if(row % 2 == 1) {
+						game_Field.selX++;
+					}
+					game_Field.selY = row - 1;
+				}
+			} else {
+				game_Field.selY = row;
 			}
 		}
-		game_Field.selX = cx / 62 | 0;
-		game_Field.selY = _dy;
+		game_Field.selAround();
+	} else {
+		var _boardCols = game_Field.boardCols;
+		if(row % 2 == 1) {
+			_boardCols = game_Field.boardCols - 1;
+		}
+		if(cx < 0 || cx > _boardCols * game_Field.cellW - 1) {
+			return;
+		}
+		game_Field.selX = cx / game_Field.cellW | 0;
+		game_Field.selY = row;
 		game_Field.selAround();
 	}
 };
 game_Field.selAround = function() {
 	var _g = 0;
-	var _g1 = game_Field.boardRow;
+	var _g1 = game_Field.boardRows;
 	while(_g < _g1) {
 		var iy = _g++;
 		var _g2 = 0;
-		var _g11 = game_Field.boardCol;
+		var _g11 = game_Field.boardCols;
 		while(_g2 < _g11) game_Field.map[iy][_g2++] = 0;
 	}
-	game_Field.freeCells = 0;
+	game_Field.aroundCells = 0;
 	if(game_Field.selX > 0) {
 		var x = game_Field.selX - 1;
 		var y = game_Field.selY;
-		if(!(y % 2 == 1 && x > game_Field.boardCol - 2)) {
+		if(!(y % 2 == 1 && x > game_Field.boardCols - 2)) {
 			game_Field.map[y][x] = 1;
-			game_Field.freeCells++;
+			game_Field.aroundCells++;
 		}
 	}
 	if(game_Field.selY > 0) {
 		var x1 = game_Field.selX;
 		var y1 = game_Field.selY - 1;
-		if(!(y1 % 2 == 1 && x1 > game_Field.boardCol - 2)) {
+		if(!(y1 % 2 == 1 && x1 > game_Field.boardCols - 2)) {
 			game_Field.map[y1][x1] = 1;
-			game_Field.freeCells++;
+			game_Field.aroundCells++;
 		}
 	}
-	if(game_Field.selX < game_Field.boardCol - 1) {
+	if(game_Field.selX < game_Field.boardCols - 1) {
 		var x2 = game_Field.selX + 1;
 		var y2 = game_Field.selY;
-		if(!(y2 % 2 == 1 && x2 > game_Field.boardCol - 2)) {
+		if(!(y2 % 2 == 1 && x2 > game_Field.boardCols - 2)) {
 			game_Field.map[y2][x2] = 1;
-			game_Field.freeCells++;
+			game_Field.aroundCells++;
 		}
 	}
-	if(game_Field.selY < game_Field.boardRow - 1) {
+	if(game_Field.selY < game_Field.boardRows - 1) {
 		var x3 = game_Field.selX;
 		var y3 = game_Field.selY + 1;
-		if(!(y3 % 2 == 1 && x3 > game_Field.boardCol - 2)) {
+		if(!(y3 % 2 == 1 && x3 > game_Field.boardCols - 2)) {
 			game_Field.map[y3][x3] = 1;
-			game_Field.freeCells++;
+			game_Field.aroundCells++;
 		}
 	}
 	if(game_Field.selY % 2 == 0) {
@@ -640,39 +671,38 @@ game_Field.selAround = function() {
 			if(game_Field.selY > 0) {
 				var x4 = game_Field.selX - 1;
 				var y4 = game_Field.selY - 1;
-				if(!(y4 % 2 == 1 && x4 > game_Field.boardCol - 2)) {
+				if(!(y4 % 2 == 1 && x4 > game_Field.boardCols - 2)) {
 					game_Field.map[y4][x4] = 1;
-					game_Field.freeCells++;
+					game_Field.aroundCells++;
 				}
 			}
-			if(game_Field.selY < game_Field.boardRow - 1) {
+			if(game_Field.selY < game_Field.boardRows - 1) {
 				var x5 = game_Field.selX - 1;
 				var y5 = game_Field.selY + 1;
-				if(!(y5 % 2 == 1 && x5 > game_Field.boardCol - 2)) {
+				if(!(y5 % 2 == 1 && x5 > game_Field.boardCols - 2)) {
 					game_Field.map[y5][x5] = 1;
-					game_Field.freeCells++;
+					game_Field.aroundCells++;
 				}
 			}
 		}
-	} else if(game_Field.selX < game_Field.boardCol - 1) {
+	} else if(game_Field.selX < game_Field.boardCols - 1) {
 		if(game_Field.selY > 0) {
 			var x6 = game_Field.selX + 1;
 			var y6 = game_Field.selY - 1;
-			if(!(y6 % 2 == 1 && x6 > game_Field.boardCol - 2)) {
+			if(!(y6 % 2 == 1 && x6 > game_Field.boardCols - 2)) {
 				game_Field.map[y6][x6] = 1;
-				game_Field.freeCells++;
+				game_Field.aroundCells++;
 			}
 		}
-		if(game_Field.selY < game_Field.boardRow - 1) {
+		if(game_Field.selY < game_Field.boardRows - 1) {
 			var x7 = game_Field.selX + 1;
 			var y7 = game_Field.selY + 1;
-			if(!(y7 % 2 == 1 && x7 > game_Field.boardCol - 2)) {
+			if(!(y7 % 2 == 1 && x7 > game_Field.boardCols - 2)) {
 				game_Field.map[y7][x7] = 1;
-				game_Field.freeCells++;
+				game_Field.aroundCells++;
 			}
 		}
 	}
-	haxe_Log.trace(game_Field.freeCells,{ fileName : "game/Field.hx", lineNumber : 99, className : "game.Field", methodName : "selAround"});
 };
 var khm_imgui_ImguiSets = function(autoNotifyInput,redrawOnEvents,debug) {
 	this.debug = false;
@@ -13788,12 +13818,16 @@ Widgets.buttonW = 70;
 Widgets.buttonH = 40;
 game_Field.boardX = 9;
 game_Field.boardY = 4;
-game_Field.boardCol = 10;
-game_Field.boardRow = 7;
-game_Field.map = [];
+game_Field.boardCols = 10;
+game_Field.boardRows = 7;
+game_Field.cellW = 62;
+game_Field.cellH = 48;
+game_Field.triangleW = 31;
+game_Field.triangleH = 16;
 game_Field.selX = 0;
 game_Field.selY = 0;
-game_Field.freeCells = 0;
+game_Field.map = [];
+game_Field.aroundCells = 0;
 kha_input_Mouse.__meta__ = { fields : { sendLeaveEvent : { input : null}, sendDownEvent : { input : null}, sendUpEvent : { input : null}, sendMoveEvent : { input : null}, sendWheelEvent : { input : null}}};
 kha_SystemImpl.mobile = false;
 kha_SystemImpl.ios = false;
