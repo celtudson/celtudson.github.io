@@ -253,6 +253,7 @@ khm_Screen.prototype = {
 	}
 	,_onKeyDown: function(key) {
 		this.keys.h[key] = true;
+		this.onKeyDown(key);
 	}
 	,_onKeyUp: function(key) {
 		this.keys.h[key] = false;
@@ -381,6 +382,8 @@ khm_Screen.prototype = {
 	,onUpdate: function() {
 	}
 	,onRender: function(frame) {
+	}
+	,onKeyDown: function(key) {
 	}
 	,onKeyUp: function(key) {
 	}
@@ -669,6 +672,25 @@ game_Game.prototype = $extend(khm_Screen.prototype,{
 	}
 	,onMouseUp: function(p) {
 		game_Game.ui.onMouseUp(p);
+	}
+	,onKeyDown: function(key) {
+		if(key == 97) {
+			rogue_Map.moveHero(-1,1);
+		} else if(key == 98) {
+			rogue_Map.moveHero(0,1);
+		} else if(key == 99) {
+			rogue_Map.moveHero(1,1);
+		} else if(key == 100) {
+			rogue_Map.moveHero(-1,0);
+		} else if(key == 102) {
+			rogue_Map.moveHero(1,0);
+		} else if(key == 103) {
+			rogue_Map.moveHero(-1,-1);
+		} else if(key == 104) {
+			rogue_Map.moveHero(0,-1);
+		} else if(key == 105) {
+			rogue_Map.moveHero(1,-1);
+		}
 	}
 	,onKeyUp: function(key) {
 		if(key == 82) {
@@ -13318,12 +13340,15 @@ rogue_Map.onInit = function(g) {
 	rogue_Map.reset();
 };
 rogue_Map.reset = function() {
-	rogue_Map.clear();
-	rogue_Map.last = { x1 : 1, y1 : 1, x2 : 2, y2 : 2};
-	var _g = 0;
-	while(_g < 100) {
-		++_g;
-		rogue_Map.rect();
+	rogue_Map.freeList.length = 0;
+	while(rogue_Map.freeList.length < 60) {
+		rogue_Map.clear();
+		rogue_Map.last = { x1 : 1, y1 : 1, x2 : 2, y2 : 2};
+		var _g = 0;
+		while(_g < 100) {
+			++_g;
+			rogue_Map.rect();
+		}
 	}
 };
 rogue_Map.clear = function() {
@@ -13338,11 +13363,14 @@ rogue_Map.clear = function() {
 		while(_g2 < _g11) {
 			var ix = _g2++;
 			rogue_Map.map[iy][ix] = -1;
-			rogue_Map.rectMap[iy][ix] = -1;
+			rogue_Map.rectMap[iy][ix] = 0;
 		}
 	}
 	rogue_Map.freeList.length = 0;
-	rogue_Map.rectN = 0;
+	rogue_Map.freeList[0] = true;
+	rogue_Map.rectN = 1;
+	rogue_Map.offset = 1;
+	rogue_Map.hero = { x : 2, y : 2};
 };
 rogue_Map.rect = function() {
 	var w = rogue_Map.minRectW + Std.random(3);
@@ -13352,18 +13380,19 @@ rogue_Map.rect = function() {
 	var cords_y1 = rogue_Map.last.y1;
 	switch(dir) {
 	case 0:
-		cords_x1 = rogue_Map.last.x1 - 1 - w;
+		cords_x1 = rogue_Map.last.x1 - rogue_Map.offset - w;
 		break;
 	case 1:
-		cords_y1 = rogue_Map.last.y1 - 1 - h;
+		cords_y1 = rogue_Map.last.y1 - rogue_Map.offset - h;
 		break;
 	case 2:
-		cords_x1 = rogue_Map.last.x2 + 1;
+		cords_x1 = rogue_Map.last.x2 + rogue_Map.offset;
 		break;
 	case 3:
-		cords_y1 = rogue_Map.last.y2 + 1;
+		cords_y1 = rogue_Map.last.y2 + rogue_Map.offset;
 		break;
 	}
+	rogue_Map.offset = 1;
 	var x1 = cords_x1;
 	var y1 = cords_y1;
 	var x2 = x1 + w;
@@ -13385,6 +13414,7 @@ rogue_Map.rect = function() {
 					}
 				}
 			}
+			var notOverlay = true;
 			var _g21 = y1 + 1;
 			var _g3 = y2 - 1;
 			while(_g21 < _g3) {
@@ -13394,23 +13424,18 @@ rogue_Map.rect = function() {
 				while(_g22 < _g31) {
 					var ix1 = _g22++;
 					rogue_Map.map[iy1][ix1] = 0;
-					rogue_Map.freeList[rogue_Map.rectMap[iy1][ix1]] = false;
+					if(rogue_Map.rectMap[iy1][ix1] > 0) {
+						rogue_Map.freeList[rogue_Map.rectMap[iy1][ix1]] = false;
+						notOverlay = false;
+					}
 					rogue_Map.rectMap[iy1][ix1] = rogue_Map.rectN;
 				}
 			}
-			rogue_Map.freeList[rogue_Map.rectN] = true;
+			rogue_Map.freeList[rogue_Map.rectN] = notOverlay;
 			rogue_Map.rectN++;
 			return true;
 		})()) {
-			var tmp = Std.random(rogue_Map.mapW - rogue_Map.minRectW);
-			rogue_Map.last.x1 = 1 + tmp;
-			var tmp1 = Std.random(rogue_Map.mapH - rogue_Map.minRectH);
-			rogue_Map.last.y1 = 1 + tmp1;
-			rogue_Map.last.x2 = rogue_Map.last.x1 + rogue_Map.minRectW;
-			rogue_Map.last.y2 = rogue_Map.last.y1 + rogue_Map.minRectH;
 			return false;
-		} else {
-			rogue_Map.last = { x1 : x1, y1 : y1, x2 : x2, y2 : y2};
 		}
 		var _g4 = y1;
 		var _g12 = y2;
@@ -13436,6 +13461,85 @@ rogue_Map.rect = function() {
 				rogue_Map.map[y][ix2] = 1;
 			}
 		}
+		var getY = function() {
+			var begin = (Math.max(rogue_Map.last.y1,y1) | 0) + 1;
+			return begin + Std.random((Math.min(rogue_Map.last.y2,y2) | 0) - 1 - begin);
+		};
+		var getX = function() {
+			var begin1 = (Math.max(rogue_Map.last.x1,x1) | 0) + 1;
+			return begin1 + Std.random((Math.min(rogue_Map.last.x2,x2) | 0) - 1 - begin1);
+		};
+		switch(dir) {
+		case 0:
+			var y3 = getY();
+			var _g41 = x2 - 1;
+			var _g5 = rogue_Map.last.x1 + 1;
+			while(_g41 < _g5) {
+				var ix3 = _g41++;
+				var y4 = y3 - 1;
+				if(rogue_Map.map[y4][ix3] == -1) {
+					rogue_Map.map[y4][ix3] = 1;
+				}
+				rogue_Map.map[y3][ix3] = 0;
+				var y5 = y3 + 1;
+				if(rogue_Map.map[y5][ix3] == -1) {
+					rogue_Map.map[y5][ix3] = 1;
+				}
+			}
+			break;
+		case 1:
+			var x3 = getX();
+			var _g42 = y2 - 1;
+			var _g51 = rogue_Map.last.y1 + 1;
+			while(_g42 < _g51) {
+				var iy3 = _g42++;
+				var x4 = x3 - 1;
+				if(rogue_Map.map[iy3][x4] == -1) {
+					rogue_Map.map[iy3][x4] = 1;
+				}
+				rogue_Map.map[iy3][x3] = 0;
+				var x5 = x3 + 1;
+				if(rogue_Map.map[iy3][x5] == -1) {
+					rogue_Map.map[iy3][x5] = 1;
+				}
+			}
+			break;
+		case 2:
+			var y6 = getY();
+			var _g43 = rogue_Map.last.x2 - 1;
+			var _g52 = x1 + 1;
+			while(_g43 < _g52) {
+				var ix4 = _g43++;
+				var y7 = y6 - 1;
+				if(rogue_Map.map[y7][ix4] == -1) {
+					rogue_Map.map[y7][ix4] = 1;
+				}
+				rogue_Map.map[y6][ix4] = 0;
+				var y8 = y6 + 1;
+				if(rogue_Map.map[y8][ix4] == -1) {
+					rogue_Map.map[y8][ix4] = 1;
+				}
+			}
+			break;
+		case 3:
+			var x6 = getX();
+			var _g44 = rogue_Map.last.y2 - 1;
+			var _g53 = y1 + 1;
+			while(_g44 < _g53) {
+				var iy4 = _g44++;
+				var x7 = x6 - 1;
+				if(rogue_Map.map[iy4][x7] == -1) {
+					rogue_Map.map[iy4][x7] = 1;
+				}
+				rogue_Map.map[iy4][x6] = 0;
+				var x8 = x6 + 1;
+				if(rogue_Map.map[iy4][x8] == -1) {
+					rogue_Map.map[iy4][x8] = 1;
+				}
+			}
+			break;
+		}
+		rogue_Map.last = { x1 : x1, y1 : y1, x2 : x2, y2 : y2};
 		return true;
 	}
 	return false;
@@ -13462,36 +13566,42 @@ rogue_Map.onRender = function(g) {
 		var _g31 = rogue_Map.mapW;
 		while(_g21 < _g31) {
 			var ix = _g21++;
-			if(rogue_Map.map[iy][ix] > -1) {
-				var n = rogue_Map.rectMap[iy][ix];
-				var tmp;
-				switch(n > -1 ? rogue_Map.freeList[n] : true) {
-				case false:
-					tmp = -2046885888;
-					break;
-				case true:
-					tmp = -2063532288;
-					break;
-				}
-				g.set_color(tmp);
-				var char;
-				switch(rogue_Map.map[iy][ix]) {
-				case 0:
-					char = ".";
-					break;
-				case 1:
-					char = "x";
-					break;
-				case 2:
-					char = "@";
-					break;
-				default:
-					char = "";
-				}
-				g.drawString(char,ix * 10,iy * 10);
+			if(rogue_Map.map[iy][ix] == -1) {
+				continue;
 			}
+			var tmp;
+			switch(rogue_Map.freeList[rogue_Map.rectMap[iy][ix]]) {
+			case false:
+				tmp = -2046885888;
+				break;
+			case true:
+				tmp = -2063532288;
+				break;
+			}
+			g.set_color(tmp);
+			var char;
+			switch(rogue_Map.map[iy][ix]) {
+			case 0:
+				char = ".";
+				break;
+			case 1:
+				char = "x";
+				break;
+			default:
+				char = "x";
+			}
+			g.drawString(char,ix * 10,iy * 10);
 		}
 	}
+	g.set_color(-2063532288);
+	g.drawString("@",rogue_Map.hero.x * 10,rogue_Map.hero.y * 10);
+};
+rogue_Map.moveHero = function(dx,dy) {
+	if(rogue_Map.map[rogue_Map.hero.y + dy][rogue_Map.hero.x + dx] == 1) {
+		return;
+	}
+	rogue_Map.hero.x += dx;
+	rogue_Map.hero.y += dy;
 };
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $global.$haxeUID++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = m.bind(o); o.hx__closures__[m.__id__] = f; } return f; }
 if(typeof $global.$haxeUID == "undefined") $global.$haxeUID = 0;
@@ -13631,6 +13741,7 @@ khm_utils_Atlas.defaultProps = new khm_utils_AtlasProps(null,null);
 rogue_Map.map = [];
 rogue_Map.rectMap = [];
 rogue_Map.freeList = [];
+rogue_Map.hero = { x : 0, y : 0};
 rogue_Map.mapW = 40;
 rogue_Map.mapH = 40;
 rogue_Map.minRectW = 4;
