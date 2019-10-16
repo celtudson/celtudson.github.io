@@ -13185,8 +13185,8 @@ rogue_Map.rect = function() {
 		})()) {
 			return false;
 		}
-		var _g4 = y1;
-		var _g12 = y2;
+		var _g4 = y1 + 1;
+		var _g12 = y2 - 1;
 		while(_g4 < _g12) {
 			var iy2 = _g4++;
 			if(rogue_Map.map[iy2][x1] == -1) {
