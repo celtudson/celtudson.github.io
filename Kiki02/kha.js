@@ -1113,7 +1113,7 @@ game_Tasks.onUpdate = function() {
 				} else {
 					removeTasks.push(task);
 					ship.taskId = -1;
-					game_Events.messagePause("Заказ выполнен! Что теперь?");
+					game_Events.messagePause("Заказ выполнен! Что теперь? А теперь конец демо!");
 				}
 			}
 			break;
