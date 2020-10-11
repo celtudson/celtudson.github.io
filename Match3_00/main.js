@@ -828,18 +828,7 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 					return _gthis.isClicksDenied = false;
 				}});
 			} else {
-				var _g = 0;
-				while(_g < matches.length) {
-					var line = matches[_g];
-					++_g;
-					var _g1 = 0;
-					while(_g1 < line.length) {
-						var candy = line[_g1];
-						++_g1;
-						candy.type = -1;
-						_gthis.anims.play("boom",candy.sprite);
-					}
-				}
+				_gthis.destroyMatches(matches);
 				_gthis.traceCandyMap();
 				_gthis.dropCandiesAndAddNewOnes();
 			}
@@ -847,23 +836,32 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 	}
 	,checkMapWithoutSwapes: function() {
 		var matches = this.findMatches();
-		haxe_Log.trace("Линий: " + matches.length,{ fileName : "src/match3/GameScene.hx", lineNumber : 267, className : "match3.GameScene", methodName : "checkMapWithoutSwapes"});
+		haxe_Log.trace("Линий: " + matches.length,{ fileName : "src/match3/GameScene.hx", lineNumber : 260, className : "match3.GameScene", methodName : "checkMapWithoutSwapes"});
 		if(matches.length == 0) {
 			this.isClicksDenied = false;
 		} else {
-			var _g = 0;
-			while(_g < matches.length) {
-				var line = matches[_g];
-				++_g;
-				var _g1 = 0;
-				while(_g1 < line.length) {
-					var candy = line[_g1];
-					++_g1;
-					candy.type = -1;
-					this.anims.play("boom",candy.sprite);
-				}
-			}
+			this.destroyMatches(matches);
 			this.dropCandiesAndAddNewOnes();
+		}
+	}
+	,destroyMatches: function(matches) {
+		var _gthis = this;
+		var _g = 0;
+		while(_g < matches.length) {
+			var line = matches[_g];
+			++_g;
+			var _g1 = 0;
+			while(_g1 < line.length) {
+				var candy = [line[_g1]];
+				++_g1;
+				candy[0].type = -1;
+				candy[0].sprite.play("boom",false);
+				candy[0].sprite.once("animationcomplete",(function(candy) {
+					return function() {
+						return _gthis.candyBoard.remove(candy[0].sprite);
+					};
+				})(candy));
+			}
 		}
 	}
 	,dropCandiesAndAddNewOnes: function() {
@@ -894,7 +892,7 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 					highestNotEmptyCellY = cellY[0];
 				}
 			}
-			haxe_Log.trace("x: " + cellX[0] + ", highest: " + highestNotEmptyCellY,{ fileName : "src/match3/GameScene.hx", lineNumber : 310, className : "match3.GameScene", methodName : "dropCandiesAndAddNewOnes"});
+			haxe_Log.trace("x: " + cellX[0] + ", highest: " + highestNotEmptyCellY,{ fileName : "src/match3/GameScene.hx", lineNumber : 309, className : "match3.GameScene", methodName : "dropCandiesAndAddNewOnes"});
 			howManyCandiesNeedToSpawn[cellX[0]] = highestNotEmptyCellY;
 		}
 		lazyr_Lazyr.delayed(700,function() {
@@ -948,7 +946,7 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 				} else {
 					if(match.length >= 3) {
 						matches.push(match);
-						haxe_Log.trace(ix,{ fileName : "src/match3/GameScene.hx", lineNumber : 364, className : "match3.GameScene", methodName : "findMatches", customParams : [iy,match.length]});
+						haxe_Log.trace(ix,{ fileName : "src/match3/GameScene.hx", lineNumber : 363, className : "match3.GameScene", methodName : "findMatches", customParams : [iy,match.length]});
 					}
 					match = [];
 					match.push(candy);
@@ -975,7 +973,7 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 				} else {
 					if(match.length >= 3) {
 						matches.push(match);
-						haxe_Log.trace(iy,{ fileName : "src/match3/GameScene.hx", lineNumber : 364, className : "match3.GameScene", methodName : "findMatches", customParams : [ix,match.length]});
+						haxe_Log.trace(iy,{ fileName : "src/match3/GameScene.hx", lineNumber : 363, className : "match3.GameScene", methodName : "findMatches", customParams : [ix,match.length]});
 					}
 					match = [];
 					match.push(candy);
@@ -1008,7 +1006,8 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 			}
 			text += string;
 		}
-		haxe_Log.trace(text,{ fileName : "src/match3/GameScene.hx", lineNumber : 387, className : "match3.GameScene", methodName : "traceCandyMap"});
+		haxe_Log.trace(text,{ fileName : "src/match3/GameScene.hx", lineNumber : 386, className : "match3.GameScene", methodName : "traceCandyMap"});
+		haxe_Log.trace("Спрайтов конфет: " + this.candyBoard.getAll().length,{ fileName : "src/match3/GameScene.hx", lineNumber : 387, className : "match3.GameScene", methodName : "traceCandyMap"});
 	}
 });
 var match3_LoaderScene = function() {
@@ -1034,7 +1033,7 @@ match3_LoaderScene.prototype = $extend(Phaser.Scene.prototype,{
 				_gthis.load.textureManager.addAtlas(item.name,item.img,data);
 			}
 		},function() {
-			_gthis.anims.create({ key : "boom", frames : [{ key : "explosion", frame : "explosion0"},{ key : "explosion", frame : "explosion1"},{ key : "explosion", frame : "explosion2"},{ key : "explosion", frame : "explosion3"},{ key : "explosion", frame : "explosion4"},{ key : "explosion", frame : "explosion5"},{ key : "explosion", frame : "explosion6"},{ key : "explosion", frame : "explosion7"}], frameRate : 12, hideOnComplete : true});
+			_gthis.anims.create({ key : "boom", frames : [{ key : "explosion", frame : "explosion0"},{ key : "explosion", frame : "explosion1"},{ key : "explosion", frame : "explosion2"},{ key : "explosion", frame : "explosion3"},{ key : "explosion", frame : "explosion4"},{ key : "explosion", frame : "explosion5"},{ key : "explosion", frame : "explosion6"},{ key : "explosion", frame : "explosion7"}], frameRate : 12});
 			haxe_Log.trace("Loading is done!",{ fileName : "src/match3/LoaderScene.hx", lineNumber : 53, className : "match3.LoaderScene", methodName : "create"});
 			Main.onResize();
 			_gthis.scene.start("GameScene");
