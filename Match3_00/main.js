@@ -809,6 +809,8 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 			newCellY = oldCellY;
 		}
 		if(newCellX < 0 || newCellY < 0 || newCellX > this.candyMap[0].length - 1 || newCellY > this.candyMap.length - 1) {
+			this.isCandyDrag = false;
+			this.isClicksDenied = false;
 			return;
 		}
 		var replacedCandy = this.candyMap[newCellY][newCellX];
@@ -820,7 +822,7 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 			_gthis.traceCandyMap();
 			_gthis.swapCandiesProps(oldCellX,oldCellY,newCellX,newCellY);
 			var matches = _gthis.findMatches();
-			haxe_Log.trace("Линий: " + matches.length,{ fileName : "src/match3/GameScene.hx", lineNumber : 228, className : "match3.GameScene", methodName : "swapCandy"});
+			haxe_Log.trace("Линий: " + matches.length,{ fileName : "src/match3/GameScene.hx", lineNumber : 232, className : "match3.GameScene", methodName : "swapCandy"});
 			if(matches.length == 0) {
 				_gthis.swapCandiesProps(oldCellX,oldCellY,newCellX,newCellY);
 				_gthis.tweens.add({ targets : replacedCandy.sprite, duration : _gthis.returnDuration, ease : _gthis.returnEase, x : newCellX * _gthis.cellWidth + _gthis.cellWidth / 2, y : newCellY * _gthis.cellWidth + _gthis.cellWidth / 2});
@@ -836,7 +838,7 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 	}
 	,checkMapWithoutSwapes: function() {
 		var matches = this.findMatches();
-		haxe_Log.trace("Линий: " + matches.length,{ fileName : "src/match3/GameScene.hx", lineNumber : 260, className : "match3.GameScene", methodName : "checkMapWithoutSwapes"});
+		haxe_Log.trace("Линий: " + matches.length,{ fileName : "src/match3/GameScene.hx", lineNumber : 264, className : "match3.GameScene", methodName : "checkMapWithoutSwapes"});
 		if(matches.length == 0) {
 			this.isClicksDenied = false;
 		} else {
@@ -892,7 +894,7 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 					highestNotEmptyCellY = cellY[0];
 				}
 			}
-			haxe_Log.trace("x: " + cellX[0] + ", highest: " + highestNotEmptyCellY,{ fileName : "src/match3/GameScene.hx", lineNumber : 309, className : "match3.GameScene", methodName : "dropCandiesAndAddNewOnes"});
+			haxe_Log.trace("x: " + cellX[0] + ", highest: " + highestNotEmptyCellY,{ fileName : "src/match3/GameScene.hx", lineNumber : 313, className : "match3.GameScene", methodName : "dropCandiesAndAddNewOnes"});
 			howManyCandiesNeedToSpawn[cellX[0]] = highestNotEmptyCellY;
 		}
 		lazyr_Lazyr.delayed(700,function() {
@@ -946,7 +948,7 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 				} else {
 					if(match.length >= 3) {
 						matches.push(match);
-						haxe_Log.trace(ix,{ fileName : "src/match3/GameScene.hx", lineNumber : 363, className : "match3.GameScene", methodName : "findMatches", customParams : [iy,match.length]});
+						haxe_Log.trace(ix,{ fileName : "src/match3/GameScene.hx", lineNumber : 367, className : "match3.GameScene", methodName : "findMatches", customParams : [iy,match.length]});
 					}
 					match = [];
 					match.push(candy);
@@ -973,7 +975,7 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 				} else {
 					if(match.length >= 3) {
 						matches.push(match);
-						haxe_Log.trace(iy,{ fileName : "src/match3/GameScene.hx", lineNumber : 363, className : "match3.GameScene", methodName : "findMatches", customParams : [ix,match.length]});
+						haxe_Log.trace(iy,{ fileName : "src/match3/GameScene.hx", lineNumber : 367, className : "match3.GameScene", methodName : "findMatches", customParams : [ix,match.length]});
 					}
 					match = [];
 					match.push(candy);
@@ -1006,8 +1008,8 @@ match3_GameScene.prototype = $extend(Phaser.Scene.prototype,{
 			}
 			text += string;
 		}
-		haxe_Log.trace(text,{ fileName : "src/match3/GameScene.hx", lineNumber : 386, className : "match3.GameScene", methodName : "traceCandyMap"});
-		haxe_Log.trace("Спрайтов конфет: " + this.candyBoard.getAll().length,{ fileName : "src/match3/GameScene.hx", lineNumber : 387, className : "match3.GameScene", methodName : "traceCandyMap"});
+		haxe_Log.trace(text,{ fileName : "src/match3/GameScene.hx", lineNumber : 390, className : "match3.GameScene", methodName : "traceCandyMap"});
+		haxe_Log.trace("Спрайтов конфет: " + this.candyBoard.getAll().length,{ fileName : "src/match3/GameScene.hx", lineNumber : 391, className : "match3.GameScene", methodName : "traceCandyMap"});
 	}
 });
 var match3_LoaderScene = function() {
