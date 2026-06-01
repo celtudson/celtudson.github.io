@@ -1,0 +1,208 @@
+{
+	"textures": [
+		{
+			"image": "debug.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 256,
+				"h": 256
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "icon_close",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 70,
+						"h": 70
+					},
+					"spriteSourceSize": {
+						"x": 1,
+						"y": 1,
+						"w": 68,
+						"h": 68
+					},
+					"frame": {
+						"x": 106,
+						"y": 106,
+						"w": 68,
+						"h": 68
+					}
+				},
+				{
+					"filename": "icon_image",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 120,
+						"h": 101
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 0,
+						"w": 112,
+						"h": 96
+					},
+					"frame": {
+						"x": 0,
+						"y": 0,
+						"w": 112,
+						"h": 96
+					}
+				},
+				{
+					"filename": "icon_layers",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 118,
+						"h": 113
+					},
+					"spriteSourceSize": {
+						"x": 6,
+						"y": 3,
+						"w": 104,
+						"h": 104
+					},
+					"frame": {
+						"x": 114,
+						"y": 0,
+						"w": 104,
+						"h": 104
+					}
+				},
+				{
+					"filename": "icon_layers2",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 104,
+						"h": 106
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 2,
+						"w": 104,
+						"h": 104
+					},
+					"frame": {
+						"x": 0,
+						"y": 98,
+						"w": 104,
+						"h": 104
+					}
+				},
+				{
+					"filename": "panel_bg",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 50,
+						"h": 50
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 50,
+						"h": 50
+					},
+					"frame": {
+						"x": 0,
+						"y": 204,
+						"w": 50,
+						"h": 50
+					}
+				},
+				{
+					"filename": "panel_bg2",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 50,
+						"h": 50
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 50,
+						"h": 50
+					},
+					"frame": {
+						"x": 52,
+						"y": 204,
+						"w": 50,
+						"h": 50
+					}
+				},
+				{
+					"filename": "panel_drag",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 33,
+						"h": 5
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 33,
+						"h": 5
+					},
+					"frame": {
+						"x": 220,
+						"y": 0,
+						"w": 33,
+						"h": 5
+					}
+				},
+				{
+					"filename": "round_rect",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 50,
+						"h": 50
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 50,
+						"h": 50
+					},
+					"frame": {
+						"x": 104,
+						"y": 204,
+						"w": 50,
+						"h": 50
+					}
+				},
+				{
+					"filename": "white_rect",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 50,
+						"h": 50
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 50,
+						"h": 50
+					},
+					"frame": {
+						"x": 176,
+						"y": 106,
+						"w": 50,
+						"h": 50
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://github.com/RblSb/khm-texture-packer",
+		"version": "1.0"
+	}
+}
