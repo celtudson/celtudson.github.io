@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Anton Genius - Главная</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+			/* Точно такой же набор шрифтов */
+			background-color: #0a0a0a;
+			color: black;
+			margin: 0;
+		}
+
+		header {
+			background-color: #ffff00;
+			padding: 15px 20px;
+			font-weight: 900;
+			font-size: 24px;
+			letter-spacing: -1px;
+			border-bottom: 2px solid #000;
+		}
+
+		/* Добавили стиль для ссылки в шапке, как в song.html */
+		header a {
+			text-decoration: none;
+			color: #000;
+		}
+
+		header span {
+			background: #000;
+			color: #ffff00;
+			padding: 2px 6px;
+			margin-right: 5px;
+		}
+
+		.container {
+			max-width: 600px;
+			margin: 40px auto;
+			padding: 0 20px;
+		}
+
+		h2 {
+			font-family: sans-serif;
+			color: #ffffff;
+			border-bottom: 2px solid #2d2d2d;
+			padding-bottom: 10px;
+		}
+
+		ul {
+			list-style: none;
+			padding: 0;
+		}
+
+		li {
+			margin: 15px 0;
+		}
+
+		a {
+			font-size: 20px;
+			color: #5d75ff;
+			text-decoration: none;
+			font-weight: bold;
+			transition: color 0.15s ease;
+		}
+
+		a:hover {
+			color: #8fa0ff;
+			text-decoration: underline;
+		}
+	</style>
+</head>
+
+<body>
+
+	<header><span>ANTON</span>GENIUS</header>
+
+	<div class="container">
+		<h2>Популярные треки текущего сезона:</h2>
+		<ul>
+			<li><a href="song.html?id=s2_brat_za_brata">2. ПСНП — Брат за брата</a></li>
+			<li><a href="song.html?id=s1_sanya">1. ПСНП — С днём рождения, Саня!</a></li>
+			<!--<li><a href="song.html?id=burger">MC Котлеткин — Ода Двойному Чизбургеру</a></li>-->
+		</ul>
+	</div>
+
+</body>
+
+</html>
